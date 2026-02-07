@@ -214,3 +214,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Implemented full backend with auth (signup/signin JWT), wallet connect/disconnect, transactions CRUD, exchange rates. Backend runs on port 8001 with /api prefix. All endpoints use JWT auth except signup, signin, exchange-rates, and root."
+  - agent: "testing"
+    message: "Backend testing completed successfully. All 8 API endpoints tested and working correctly. Comprehensive test suite created in backend_test.py. Tested full flow: signup → signin → get me → connect wallet → create transaction → list transactions → disconnect wallet → get exchange rates. All error cases validated (duplicate email, wrong password, unauthenticated access, transaction without wallet). Backend is fully functional and ready for production use."
