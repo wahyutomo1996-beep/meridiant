@@ -122,7 +122,7 @@ export const SignInModal = ({ open, onClose, onSignIn, onSwitchToSignUp }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) { setError('Please fill in all fields'); return; }
     setLoading(true); setError('');
