@@ -1,34 +1,108 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Star twinkle animation */
+.star-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+/* Shooting stars */
+.shooting-star {
+  position: absolute;
+  width: 80px;
+  height: 1.5px;
+  background: linear-gradient(to right, rgba(52, 211, 153, 0.8), rgba(52, 211, 153, 0.1), transparent);
+  transform: rotate(-45deg);
+  animation: shoot 6s linear infinite;
+  opacity: 0;
+  border-radius: 2px;
 }
 
-.App-link {
-    color: #61dafb;
+@keyframes shoot {
+  0% { opacity: 0; transform: translateX(0) translateY(0) rotate(-45deg); }
+  3% { opacity: 1; }
+  12% { opacity: 0; transform: translateX(-350px) translateY(350px) rotate(-45deg); }
+  100% { opacity: 0; }
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Nebula clouds */
+.nebula-cloud {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.nebula-1 {
+  top: -15%;
+  right: -10%;
+  width: 60%;
+  height: 50%;
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.06) 40%, transparent 70%);
+  filter: blur(80px);
+}
+
+.nebula-2 {
+  top: 25%;
+  right: 5%;
+  width: 45%;
+  height: 40%;
+  background: radial-gradient(ellipse at center, rgba(52, 211, 153, 0.15) 0%, rgba(16, 185, 129, 0.04) 50%, transparent 70%);
+  filter: blur(100px);
+}
+
+.nebula-3 {
+  bottom: -15%;
+  left: -10%;
+  width: 50%;
+  height: 40%;
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.12) 0%, transparent 60%);
+  filter: blur(80px);
+}
+
+.nebula-4 {
+  bottom: 10%;
+  right: 15%;
+  width: 35%;
+  height: 30%;
+  background: radial-gradient(ellipse at center, rgba(52, 211, 153, 0.08) 0%, transparent 60%);
+  filter: blur(60px);
+}
+
+/* Orbital rings */
+.orbital-ring {
+  position: absolute;
+  border: 1px solid rgba(52, 211, 153, 0.06);
+  border-radius: 50%;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(52, 211, 153, 0.2);
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.4);
+}
+
+/* Number input spinners removal */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
 }
