@@ -49,19 +49,6 @@ const Navbar = ({
             >
               Sign up
             </Button>
-            {!walletConnected ? (
-              <Button
-                onClick={onConnectWallet}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-full px-5 h-9 text-sm font-medium"
-              >
-                Connect wallet
-              </Button>
-            ) : (
-              <div className="flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/30 rounded-full px-4 py-2">
-                <CircleDot className="w-3 h-3 text-emerald-400" />
-                <span className="text-emerald-400 text-sm font-medium">{truncAddr(walletAddress)}</span>
-              </div>
-            )}
           </>
         ) : (
           <div className="relative" ref={dropdownRef}>
