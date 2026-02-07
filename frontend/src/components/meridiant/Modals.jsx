@@ -126,7 +126,14 @@ export const SignInModal = ({ open, onClose, onSignIn, onSwitchToSignUp }) => {
     e.preventDefault();
     if (!email || !password) { setError('Please fill in all fields'); return; }
     setLoading(true); setError('');
-    setTimeout(() => { onSignIn(email, password); setLoading(false); setEmail(''); setPassword(''); }, 800);
+    try {
+      await onSignIn(email, password);
+      setEmail(''); setPassword('');
+    } catch (err) {
+      setError(err.message || 'Sign in failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
