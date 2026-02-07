@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Hexagon, Shield, Flame, Layers, Eye, EyeOff, Loader2, Check } from 'lucide-react';
-import { wallets } from '../../data/mockData';
+import { Eye, EyeOff, Loader2, Check, Search, Wallet2, Hexagon, Shield, Flame, Layers } from 'lucide-react';
+import { wallets } from '@/data/mockData';
 
 const walletIcons = {
   metamask: { Icon: Hexagon, color: '#E2761B' },
@@ -10,39 +10,104 @@ const walletIcons = {
   solflare: { Icon: Flame, color: '#FC7227' },
 };
 
+const ChainBadge = ({ chain }) => {
+  const styles = {
+    EVM: { bg: 'rgba(98,126,234,0.15)', color: '#627EEA', label: 'EVM' },
+    SOL: { bg: 'rgba(153,69,255,0.15)', color: '#9945FF', label: 'SOL' },
+  };
+  const s = styles[chain];
+  if (!s) return null;
+  return (
+    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>
+      {s.label}
+    </span>
+  );
+};
+
 // ========== WALLET CONNECT MODAL ==========
 export const WalletConnectModal = ({ open, onClose, onConnect }) => {
   const [connecting, setConnecting] = useState(null);
+  const [search, setSearch] = useState('');
+
+  const filtered = wallets.filter(w =>
+    w.name.toLowerCase().includes(search.toLowerCase())
+  );
+
   const handleConnect = (wallet) => {
     setConnecting(wallet.id);
-    setTimeout(() => { onConnect(wallet); setConnecting(null); }, 1200);
+    setTimeout(() => { onConnect(wallet); setConnecting(null); setSearch(''); }, 1200);
   };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 overflow-hidden" style={{ background: '#1a2235' }}>
-        <DialogHeader className="p-5 pb-2">
-          <DialogTitle className="text-white text-lg">Connect to a wallet</DialogTitle>
-          <p className="text-gray-400 text-sm mt-1">Choose your preferred wallet to continue</p>
-        </DialogHeader>
-        <div className="p-5 pt-3 grid grid-cols-2 gap-3">
-          {wallets.map(w => {
+    <Dialog open={open} onOpenChange={(v) => { if (!v) setSearch(''); onClose(v); }}>
+      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 overflow-hidden" style={{ background: '#111827' }}>
+        {/* Header */}
+        <div className="pt-8 pb-4 px-6 text-center">
+          <div className="w-16 h-16 rounded-2xl border-2 border-gray-600/40 flex items-center justify-center mx-auto mb-5" style={{ background: '#1a2235' }}>
+            <Wallet2 className="w-7 h-7 text-gray-400" />
+          </div>
+          <h2 className="text-white text-xl font-bold mb-1">Select your wallet</h2>
+          <p className="text-gray-400 text-sm">Connect a wallet to your Meridiant account</p>
+        </div>
+
+        {/* Search */}
+        <div className="px-5 pb-3">
+          <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-gray-700/50" style={{ background: '#0c1120' }}>
+            <Search className="w-4 h-4 text-gray-500" />
+            <input
+              type="text" placeholder={`Search through ${wallets.length} wallets...`} value={search} onChange={e => setSearch(e.target.value)}
+              className="bg-transparent text-white text-sm outline-none placeholder:text-gray-500 w-full"
+            />
+          </div>
+        </div>
+
+        {/* Wallet list */}
+        <div className="px-3 pb-2 max-h-[320px] overflow-y-auto custom-scrollbar">
+          {filtered.length === 0 && (
+            <p className="text-gray-500 text-sm text-center py-6">No wallets found</p>
+          )}
+          {filtered.map(w => {
             const cfg = walletIcons[w.id];
             const isConn = connecting === w.id;
             return (
-              <button key={w.id} onClick={() => handleConnect(w)} disabled={!!connecting}
-                className="flex flex-col items-center gap-3 p-4 rounded-xl border border-gray-700/40 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all disabled:opacity-50"
-                style={{ background: '#0f1729' }}>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: cfg?.bg || (w.color + '20') }}>
-                  {isConn ? <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
-                    : cfg?.Icon && <cfg.Icon className="w-6 h-6" style={{ color: cfg.color }} />}
+              <button
+                key={w.id}
+                onClick={() => handleConnect(w)}
+                disabled={!!connecting}
+                className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl hover:bg-white/5 transition-all disabled:opacity-40 group"
+              >
+                {/* Wallet icon */}
+                <div className="relative flex-shrink-0">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105"
+                    style={{ background: w.bgColor || (w.color + '20') }}
+                  >
+                    {isConn ? (
+                      <Loader2 className="w-5 h-5 text-emerald-400 animate-spin" />
+                    ) : (
+                      cfg?.Icon && <cfg.Icon className="w-5 h-5" style={{ color: cfg.color }} />
+                    )}
+                  </div>
+                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#111827]" />
                 </div>
-                <span className="text-white text-sm font-medium">{w.name}</span>
+
+                {/* Name */}
+                <span className="text-white text-sm font-medium flex-1 text-left">{w.name}</span>
+
+                {/* Chain badges */}
+                <div className="flex items-center gap-1.5">
+                  {w.chains.map(c => <ChainBadge key={c} chain={c} />)}
+                </div>
               </button>
             );
           })}
         </div>
-        <div className="px-5 pb-4">
-          <p className="text-gray-500 text-xs text-center">By connecting, you agree to Meridiant's Terms of Service</p>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-700/30 text-center">
+          <p className="text-gray-500 text-xs">
+            By logging in I agree to the <span className="text-emerald-400 cursor-pointer hover:underline">Terms</span> & <span className="text-emerald-400 cursor-pointer hover:underline">Privacy Policy</span>
+          </p>
         </div>
       </DialogContent>
     </Dialog>
@@ -65,7 +130,7 @@ export const SignInModal = ({ open, onClose, onSignIn, onSwitchToSignUp }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) { setError(''); } onClose(v); }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) setError(''); onClose(v); }}>
       <DialogContent className="sm:max-w-md border-gray-700/50" style={{ background: '#1a2235' }}>
         <DialogHeader>
           <DialogTitle className="text-white text-xl">Sign in to Meridiant</DialogTitle>
@@ -121,7 +186,7 @@ export const SignUpModal = ({ open, onClose, onSignUp, onSwitchToSignIn }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) { setError(''); } onClose(v); }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) setError(''); onClose(v); }}>
       <DialogContent className="sm:max-w-md border-gray-700/50" style={{ background: '#1a2235' }}>
         <DialogHeader>
           <DialogTitle className="text-white text-xl">Create your account</DialogTitle>
@@ -201,43 +266,39 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm }) => {
 };
 
 // ========== PROCESSING MODAL ==========
-export const ProcessingModal = ({ open }) => {
-  return (
-    <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md border-gray-700/50 [&>button]:hidden" style={{ background: '#1a2235' }}>
-        <div className="text-center py-8">
-          <div className="w-16 h-16 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin mx-auto mb-6" />
-          <h3 className="text-white text-lg font-medium mb-2">Transaction in progress</h3>
-          <p className="text-gray-400 text-sm">Please wait while we process your transaction...</p>
-          <div className="text-amber-400 font-mono text-2xl mt-4">00:10:00</div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
+export const ProcessingModal = ({ open }) => (
+  <Dialog open={open} onOpenChange={() => {}}>
+    <DialogContent className="sm:max-w-md border-gray-700/50 [&>button]:hidden" style={{ background: '#1a2235' }}>
+      <div className="text-center py-8">
+        <div className="w-16 h-16 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin mx-auto mb-6" />
+        <h3 className="text-white text-lg font-medium mb-2">Transaction in progress</h3>
+        <p className="text-gray-400 text-sm">Please wait while we process your transaction...</p>
+        <div className="text-amber-400 font-mono text-2xl mt-4">00:10:00</div>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
 
 // ========== COMPLETE MODAL ==========
-export const CompleteModal = ({ open, onClose, data }) => {
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md border-gray-700/50" style={{ background: '#1a2235' }}>
-        <div className="text-center py-6">
-          <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-emerald-400" />
-          </div>
-          <p className="text-gray-400 text-sm mb-1">Transaction submitted</p>
-          <h3 className="text-white text-lg font-medium mb-6">Yay! Your {data?.type === 'transfer' ? 'transfer' : 'withdrawal'} is completed!</h3>
-          {data && (
-            <div className="rounded-xl p-4 text-left mb-5" style={{ background: '#0c1120' }}>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm"><span className="text-gray-400">Sent</span><span className="text-white">{data.from?.amount} {data.from?.currency?.code}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-gray-400">Received</span><span className="text-emerald-400">{data.to?.amount} {data.to?.currency?.code}</span></div>
-              </div>
-            </div>
-          )}
-          <button onClick={onClose} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors">Done</button>
+export const CompleteModal = ({ open, onClose, data }) => (
+  <Dialog open={open} onOpenChange={onClose}>
+    <DialogContent className="sm:max-w-md border-gray-700/50" style={{ background: '#1a2235' }}>
+      <div className="text-center py-6">
+        <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+          <Check className="w-8 h-8 text-emerald-400" />
         </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
+        <p className="text-gray-400 text-sm mb-1">Transaction submitted</p>
+        <h3 className="text-white text-lg font-medium mb-6">Yay! Your {data?.type === 'transfer' ? 'transfer' : 'withdrawal'} is completed!</h3>
+        {data && (
+          <div className="rounded-xl p-4 text-left mb-5" style={{ background: '#0c1120' }}>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm"><span className="text-gray-400">Sent</span><span className="text-white">{data.from?.amount} {data.from?.currency?.code}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-400">Received</span><span className="text-emerald-400">{data.to?.amount} {data.to?.currency?.code}</span></div>
+            </div>
+          </div>
+        )}
+        <button onClick={onClose} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors">Done</button>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
