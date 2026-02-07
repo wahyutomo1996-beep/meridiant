@@ -8,7 +8,7 @@ import { Button } from '../ui/button';
 const Navbar = ({
   isLoggedIn, user, walletConnected, connectedWallet,
   walletAddress, onConnectWallet, onDisconnectWallet,
-  onSignIn, onSignUp, onSignOut,
+  onSignIn, onSignUp, onSignOut, onNavigate,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
