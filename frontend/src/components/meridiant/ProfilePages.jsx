@@ -148,7 +148,7 @@ export const WithdrawalAccountPage = ({ onBack }) => {
   };
 
   const handleDelete = async (id) => {
-    try { await (await import('@/lib/api')).default.delete(`/bank-accounts/${id}`); load(); } catch { /* */ }
+    try { await api.delete(`/bank-accounts/${id}`); load(); } catch { /* */ }
   };
 
   const TypeIcon = ({ type }) => type === 'ewallet' ? <Smartphone className="w-4 h-4 text-emerald-400" /> : <Building2 className="w-4 h-4 text-emerald-400" />;
