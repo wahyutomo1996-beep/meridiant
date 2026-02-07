@@ -27,7 +27,7 @@ const Navbar = ({
 
   return (
     <nav className="flex items-center justify-between px-6 lg:px-10 py-4 relative z-50">
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => onNavigate && onNavigate('home')}>
         <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
           <span className="text-white font-bold text-sm">M</span>
         </div>
