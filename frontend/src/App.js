@@ -125,7 +125,7 @@ function App() {
       if (transactionData) {
         await transactionAPI.create({
           type: transactionData.type,
-          from_currency: transactionData.from.currency.code,
+          from_currency: transactionData.from.currency.displayCode || transactionData.from.currency.code,
           from_amount: transactionData.from.amount,
           to_currency: transactionData.to.currency.code,
           to_amount: transactionData.to.amount,
