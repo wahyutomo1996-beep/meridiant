@@ -12,6 +12,7 @@ import {
   ProcessingModal,
   CompleteModal,
 } from "@/components/meridiant/Modals";
+import { MyProfilePage, WalletAccountPage, WithdrawalAccountPage, HistoryTransactionsPage } from "@/components/meridiant/ProfilePages";
 import { authAPI, walletAPI, transactionAPI } from "@/lib/api";
 
 function App() {
