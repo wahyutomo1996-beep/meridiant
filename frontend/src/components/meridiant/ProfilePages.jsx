@@ -141,7 +141,7 @@ export const WithdrawalAccountPage = ({ onBack }) => {
 
   const handleAdd = async () => {
     try {
-      await (await import('@/lib/api')).default.post('/bank-accounts', form);
+      await api.post('/bank-accounts', form);
       setShowForm(false); setForm({ bank_name: '', account_number: '', account_holder: '', account_type: 'bank' });
       load();
     } catch { /* */ }
