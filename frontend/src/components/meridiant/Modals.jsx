@@ -189,7 +189,14 @@ export const SignUpModal = ({ open, onClose, onSignUp, onSwitchToSignIn }) => {
     if (password !== confirmPwd) { setError('Passwords do not match'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
     setLoading(true); setError('');
-    setTimeout(() => { onSignUp(name, email, password); setLoading(false); setName(''); setEmail(''); setPassword(''); setConfirmPwd(''); }, 800);
+    try {
+      await onSignUp(name, email, password);
+      setName(''); setEmail(''); setPassword(''); setConfirmPwd('');
+    } catch (err) {
+      setError(err.message || 'Sign up failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
