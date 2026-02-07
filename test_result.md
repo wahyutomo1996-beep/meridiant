@@ -101,3 +101,84 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Meridiant - Crypto On Chain / Off Chain platform (like Normies but rebranded). Backend provides auth (signup/signin with JWT), wallet connect/disconnect, transactions CRUD, and exchange rates."
+
+backend:
+  - task: "Auth - Sign Up"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+  - task: "Auth - Sign In"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+  - task: "Auth - Get Me (JWT protected)"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+  - task: "Wallet - Connect"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+  - task: "Wallet - Disconnect"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+  - task: "Transactions - Create"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+  - task: "Transactions - List"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+  - task: "Exchange Rates"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: true
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Auth - Sign Up"
+    - "Auth - Sign In"
+    - "Auth - Get Me (JWT protected)"
+    - "Wallet - Connect"
+    - "Transactions - Create"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Implemented full backend with auth (signup/signin JWT), wallet connect/disconnect, transactions CRUD, exchange rates. Backend runs on port 8001 with /api prefix. All endpoints use JWT auth except signup, signin, exchange-rates, and root."
