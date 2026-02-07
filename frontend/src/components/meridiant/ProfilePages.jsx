@@ -45,7 +45,7 @@ export const MyProfilePage = ({ user, onBack, onUpdate }) => {
   const handleSave = async () => {
     setSaving(true); setMsg('');
     try {
-      const res = await (await import('@/lib/api')).default.put('/profile', { name, phone });
+      const res = await api.put('/profile', { name, phone });
       onUpdate({ name: res.data.name, email: res.data.email });
       setEditing(false);
       setMsg('Profile updated successfully');
