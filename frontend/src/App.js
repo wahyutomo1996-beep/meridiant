@@ -127,7 +127,7 @@ function App() {
           type: transactionData.type,
           from_currency: transactionData.from.currency.displayCode || transactionData.from.currency.code,
           from_amount: transactionData.from.amount,
-          to_currency: transactionData.to.currency.code,
+          to_currency: transactionData.to.currency.displayCode || transactionData.to.currency.code,
           to_amount: transactionData.to.amount,
           method_or_dest: transactionData.method?.name || transactionData.destination?.name || null,
         });
