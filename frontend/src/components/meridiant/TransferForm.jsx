@@ -135,7 +135,9 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
 
   useEffect(() => {
     if (!fromAmount || isNaN(parseFloat(fromAmount))) { setToAmount(''); return; }
-    const key = `${fromCurrency.code}_${toCurrency.code}`;
+    const fromKey = fromCurrency.displayCode || fromCurrency.code;
+    const toKey = toCurrency.displayCode || toCurrency.code;
+    const key = `${fromKey}_${toKey}`;
     const rate = exchangeRates[key];
     if (rate) {
       const result = parseFloat(fromAmount) * rate;
