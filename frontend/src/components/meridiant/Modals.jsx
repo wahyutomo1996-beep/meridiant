@@ -183,7 +183,7 @@ export const SignUpModal = ({ open, onClose, onSignUp, onSwitchToSignIn }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email || !password || !confirmPwd) { setError('Please fill in all fields'); return; }
     if (password !== confirmPwd) { setError('Passwords do not match'); return; }
