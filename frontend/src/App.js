@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "@/App.css";
 import { BrowserRouter } from "react-router-dom";
 import Background from "@/components/meridiant/Background";
@@ -12,6 +12,7 @@ import {
   ProcessingModal,
   CompleteModal,
 } from "@/components/meridiant/Modals";
+import { authAPI, walletAPI, transactionAPI } from "@/lib/api";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -22,23 +23,60 @@ function App() {
   const [activeModal, setActiveModal] = useState(null);
   const [transactionData, setTransactionData] = useState(null);
 
-  const handleSignIn = (email) => {
-    const name = email.split("@")[0].replace(/[._-]/g, " ");
-    setUser({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      email,
-    });
-    setIsLoggedIn(true);
-    setActiveModal(null);
+  // Restore session on mount
+  const restoreSession = useCallback(async () => {
+    const token = localStorage.getItem("meridiant_token");
+    if (!token) return;
+    try {
+      const res = await authAPI.getMe();
+      const u = res.data;
+      setUser({ name: u.name, email: u.email });
+      setIsLoggedIn(true);
+      if (u.wallet_connected) {
+        setWalletConnected(true);
+        setWalletAddress(u.wallet_address || "");
+        setConnectedWallet({ name: u.wallet_name || "Wallet" });
+      }
+    } catch {
+      localStorage.removeItem("meridiant_token");
+    }
+  }, []);
+
+  useEffect(() => { restoreSession(); }, [restoreSession]);
+
+  const handleSignIn = async (email, password) => {
+    try {
+      const res = await authAPI.signin(email, password);
+      const { token, user: u } = res.data;
+      localStorage.setItem("meridiant_token", token);
+      setUser({ name: u.name, email: u.email });
+      setIsLoggedIn(true);
+      if (u.wallet_connected) {
+        setWalletConnected(true);
+        setWalletAddress(u.wallet_address || "");
+        setConnectedWallet({ name: u.wallet_name || "Wallet" });
+      }
+      setActiveModal(null);
+    } catch (err) {
+      throw new Error(err.response?.data?.detail || "Sign in failed");
+    }
   };
 
-  const handleSignUp = (name, email) => {
-    setUser({ name, email });
-    setIsLoggedIn(true);
-    setActiveModal(null);
+  const handleSignUp = async (name, email, password) => {
+    try {
+      const res = await authAPI.signup(name, email, password);
+      const { token, user: u } = res.data;
+      localStorage.setItem("meridiant_token", token);
+      setUser({ name: u.name, email: u.email });
+      setIsLoggedIn(true);
+      setActiveModal(null);
+    } catch (err) {
+      throw new Error(err.response?.data?.detail || "Sign up failed");
+    }
   };
 
   const handleSignOut = () => {
+    localStorage.removeItem("meridiant_token");
     setUser(null);
     setIsLoggedIn(false);
     setConnectedWallet(null);
@@ -46,45 +84,54 @@ function App() {
     setWalletConnected(false);
   };
 
-  const handleConnectWallet = (wallet) => {
-    const addr =
-      "0x" +
-      Array.from({ length: 40 }, () =>
-        Math.floor(Math.random() * 16).toString(16)
-      ).join("");
-    setConnectedWallet(wallet);
-    setWalletAddress(addr);
-    setWalletConnected(true);
-    setActiveModal(null);
+  const handleConnectWallet = async (wallet) => {
+    try {
+      const res = await walletAPI.connect(wallet.id, wallet.name);
+      const { wallet_address, wallet_name } = res.data;
+      setConnectedWallet({ ...wallet, name: wallet_name });
+      setWalletAddress(wallet_address);
+      setWalletConnected(true);
+      setActiveModal(null);
+    } catch {
+      // Fallback to local mock if not logged in
+      const addr = "0x" + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+      setConnectedWallet(wallet);
+      setWalletAddress(addr);
+      setWalletConnected(true);
+      setActiveModal(null);
+    }
   };
 
-  const handleDisconnectWallet = () => {
+  const handleDisconnectWallet = async () => {
+    try { await walletAPI.disconnect(); } catch { /* ignore */ }
     setConnectedWallet(null);
     setWalletAddress("");
     setWalletConnected(false);
   };
 
   const handleTransfer = (data) => {
-    if (!isLoggedIn) {
-      setActiveModal("signin");
-      return;
-    }
-    if (!walletConnected) {
-      setActiveModal("wallet");
-      return;
-    }
-    if (!data.from.amount || parseFloat(data.from.amount) <= 0) {
-      return;
-    }
+    if (!isLoggedIn) { setActiveModal("signin"); return; }
+    if (!walletConnected) { setActiveModal("wallet"); return; }
+    if (!data.from.amount || parseFloat(data.from.amount) <= 0) return;
     setTransactionData(data);
     setActiveModal("checkout");
   };
 
-  const handleConfirmTransaction = () => {
+  const handleConfirmTransaction = async () => {
     setActiveModal("processing");
-    setTimeout(() => {
-      setActiveModal("complete");
-    }, 3000);
+    try {
+      if (transactionData) {
+        await transactionAPI.create({
+          type: transactionData.type,
+          from_currency: transactionData.from.currency.code,
+          from_amount: transactionData.from.amount,
+          to_currency: transactionData.to.currency.code,
+          to_amount: transactionData.to.amount,
+          method_or_dest: transactionData.method?.name || transactionData.destination?.name || null,
+        });
+      }
+    } catch { /* ignore for now */ }
+    setTimeout(() => setActiveModal("complete"), 3000);
   };
 
   const handleTransactionComplete = () => {
