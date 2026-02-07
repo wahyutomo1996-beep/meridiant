@@ -39,7 +39,7 @@ const CurrencyPicker = ({ currencies, selected, onSelect, type }) => {
       <PopoverTrigger asChild>
         <button className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-600/30 transition-colors flex-shrink-0" style={{ background: 'rgba(75,85,99,0.3)' }}>
           {type === 'fiat' ? <FlagIcon colors={selected.flagColors} /> : <CryptoIcon color={selected.color} code={selected.code} />}
-          <span className="text-white text-sm font-medium">{selected.code}</span>
+          <span className="text-white text-sm font-medium">{selected.displayCode || selected.code}</span>
           <ChevronDown className="w-3 h-3 text-gray-400" />
         </button>
       </PopoverTrigger>
