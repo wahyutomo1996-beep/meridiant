@@ -127,13 +127,14 @@ const Navbar = ({
 
                 <div className="p-3 space-y-1">
                   {[
-                    { icon: UserCircle, label: 'My profile' },
-                    { icon: Wallet, label: 'Wallet account' },
-                    { icon: CreditCard, label: 'Withdrawal account' },
-                    { icon: History, label: 'History transactions' },
+                    { icon: UserCircle, label: 'My profile', page: 'profile' },
+                    { icon: Wallet, label: 'Wallet account', page: 'wallet-account' },
+                    { icon: CreditCard, label: 'Withdrawal account', page: 'withdrawal-account' },
+                    { icon: History, label: 'History transactions', page: 'history' },
                   ].map((item) => (
                     <button
                       key={item.label}
+                      onClick={() => { setShowDropdown(false); onNavigate && onNavigate(item.page); }}
                       className="flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-white/5 transition-colors"
                       style={{ background: '#0c1120' }}
                     >
