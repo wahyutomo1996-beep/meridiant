@@ -133,7 +133,7 @@ export const WithdrawalAccountPage = ({ onBack }) => {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    try { const r = await (await import('@/lib/api')).default.get('/bank-accounts'); setAccounts(r.data.accounts || []); }
+    try { const r = await api.get('/bank-accounts'); setAccounts(r.data.accounts || []); }
     catch { /* */ }
     setLoading(false);
   };
