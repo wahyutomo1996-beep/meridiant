@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Search, Building2, Smartphone, QrCode } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import {
-  fiatCurrencies, cryptoCurrencies, transferMethods,
-  withdrawDestinations, exchangeRates
-} from '../../data/mockData';
+  fiatCurrencies, cryptoCurrencies, transferMethodGroups,
+  withdrawDestGroups, exchangeRates
+} from '@/data/mockData';
 
 const FlagIcon = ({ colors }) => (
   <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 border border-gray-600/40">
@@ -18,6 +18,13 @@ const CryptoIcon = ({ color, code }) => (
     <span className="text-white text-[9px] font-bold">{code[0]}</span>
   </div>
 );
+
+const categoryIcons = {
+  'Bank Transfer': Building2,
+  'Bank': Building2,
+  'E-Wallet': Smartphone,
+  'QRIS': QrCode,
+};
 
 const CurrencyPicker = ({ currencies, selected, onSelect, type }) => {
   const [search, setSearch] = useState('');
@@ -61,6 +68,51 @@ const CurrencyPicker = ({ currencies, selected, onSelect, type }) => {
   );
 };
 
+// Grouped popover for transfer methods and withdraw destinations
+const GroupedPicker = ({ groups, selected, onSelect, placeholder }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button className="flex items-center justify-between w-full rounded-xl px-4 py-3 text-sm" style={{ background: '#0c1120' }}>
+          <span className={selected ? 'text-white' : 'text-gray-500'}>
+            {selected ? selected.name : placeholder}
+          </span>
+          <ChevronDown className="w-4 h-4 text-gray-500" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0 border-gray-700/50 max-h-[320px] overflow-y-auto custom-scrollbar"
+        style={{ background: '#1a2235' }}
+      >
+        {groups.map((group, gi) => {
+          const CatIcon = categoryIcons[group.category] || Building2;
+          return (
+            <div key={group.category}>
+              {gi > 0 && <div className="border-t border-gray-700/30 mx-3" />}
+              <div className="flex items-center gap-2 px-4 py-2.5 sticky top-0" style={{ background: '#1a2235' }}>
+                <CatIcon className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-400 text-xs font-semibold uppercase tracking-wider">{group.category}</span>
+              </div>
+              {group.items.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { onSelect(item); setOpen(false); }}
+                  className={`flex flex-col w-full px-4 py-2.5 pl-10 hover:bg-white/5 transition-colors text-left ${selected?.id === item.id ? 'bg-emerald-500/10' : ''}`}
+                >
+                  <span className="text-white text-sm">{item.name}</span>
+                  {item.desc && <span className="text-gray-500 text-xs">{item.desc}</span>}
+                </button>
+              ))}
+            </div>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
   const [activeTab, setActiveTab] = useState('transfer');
   const [fromCurrency, setFromCurrency] = useState(fiatCurrencies[0]);
@@ -69,8 +121,6 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
   const [toAmount, setToAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [selectedDest, setSelectedDest] = useState(null);
-  const [showMethodPop, setShowMethodPop] = useState(false);
-  const [showDestPop, setShowDestPop] = useState(false);
   const [quoteTimer, setQuoteTimer] = useState(10);
 
   useEffect(() => {
@@ -122,6 +172,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
   return (
     <div className="w-full max-w-[500px] mx-auto">
       <div className="rounded-2xl p-6 md:p-7" style={{ background: 'rgba(21, 28, 44, 0.88)', backdropFilter: 'blur(16px)', border: '1px solid rgba(52, 211, 153, 0.06)' }}>
+        {/* Tabs */}
         <div className="flex gap-8 mb-6">
           {['transfer', 'withdraw'].map(tab => (
             <button key={tab} onClick={() => handleTabSwitch(tab)}
@@ -135,6 +186,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
           ))}
         </div>
 
+        {/* From */}
         <div className="mb-4">
           <label className="text-gray-400 text-sm mb-2 block">Transfer</label>
           <div className="flex items-center gap-2 rounded-xl px-3 py-3" style={{ background: '#0c1120' }}>
@@ -144,6 +196,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
           </div>
         </div>
 
+        {/* To */}
         <div className="mb-4">
           <label className="text-gray-400 text-sm mb-2 block">Receive</label>
           <div className="flex items-center gap-2 rounded-xl px-3 py-3" style={{ background: '#0c1120' }}>
@@ -153,53 +206,20 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
           </div>
         </div>
 
+        {/* Transfer method / Withdraw destination - GROUPED */}
         {activeTab === 'transfer' ? (
           <div className="mb-4">
             <label className="text-gray-400 text-sm mb-2 block">Transfer method</label>
-            <Popover open={showMethodPop} onOpenChange={setShowMethodPop}>
-              <PopoverTrigger asChild>
-                <button className="flex items-center justify-between w-full rounded-xl px-4 py-3 text-sm" style={{ background: '#0c1120' }}>
-                  <span className={selectedMethod ? 'text-white' : 'text-gray-500'}>
-                    {selectedMethod ? selectedMethod.name : 'Choose transfer method'}
-                  </span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 border-gray-700/50" style={{ background: '#1a2235' }}>
-                {transferMethods.map(m => (
-                  <button key={m.id} onClick={() => { setSelectedMethod(m); setShowMethodPop(false); }}
-                    className={`flex flex-col w-full px-4 py-3 hover:bg-white/5 transition-colors text-left ${selectedMethod?.id === m.id ? 'bg-emerald-500/10' : ''}`}>
-                    <span className="text-white text-sm font-medium">{m.name}</span>
-                    <span className="text-gray-400 text-xs">{m.desc}</span>
-                  </button>
-                ))}
-              </PopoverContent>
-            </Popover>
+            <GroupedPicker groups={transferMethodGroups} selected={selectedMethod} onSelect={setSelectedMethod} placeholder="Choose transfer method" />
           </div>
         ) : (
           <div className="mb-4">
             <label className="text-gray-400 text-sm mb-2 block">Withdraw destination</label>
-            <Popover open={showDestPop} onOpenChange={setShowDestPop}>
-              <PopoverTrigger asChild>
-                <button className="flex items-center justify-between w-full rounded-xl px-4 py-3 text-sm" style={{ background: '#0c1120' }}>
-                  <span className={selectedDest ? 'text-white' : 'text-gray-500'}>
-                    {selectedDest ? selectedDest.name : 'Choose withdraw destination'}
-                  </span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 border-gray-700/50" style={{ background: '#1a2235' }}>
-                {withdrawDestinations.map(d => (
-                  <button key={d.id} onClick={() => { setSelectedDest(d); setShowDestPop(false); }}
-                    className={`flex items-center w-full px-4 py-3 hover:bg-white/5 transition-colors ${selectedDest?.id === d.id ? 'bg-emerald-500/10' : ''}`}>
-                    <span className="text-white text-sm">{d.name}</span>
-                  </button>
-                ))}
-              </PopoverContent>
-            </Popover>
+            <GroupedPicker groups={withdrawDestGroups} selected={selectedDest} onSelect={setSelectedDest} placeholder="Choose withdraw destination" />
           </div>
         )}
 
+        {/* Estimate */}
         <div className="mb-4 rounded-xl px-4 py-3" style={{ background: '#0c1120' }}>
           <div className="flex items-center justify-between">
             <p className="text-gray-400 text-sm">
