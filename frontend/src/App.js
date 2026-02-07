@@ -23,6 +23,7 @@ function App() {
   const [walletAddress, setWalletAddress] = useState("");
   const [activeModal, setActiveModal] = useState(null);
   const [transactionData, setTransactionData] = useState(null);
+  const [currentPage, setCurrentPage] = useState("home");
 
   // Restore session on mount
   const restoreSession = useCallback(async () => {
