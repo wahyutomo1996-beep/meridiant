@@ -52,16 +52,21 @@ const CurrencyPicker = ({ currencies, selected, onSelect, type }) => {
           </div>
         </div>
         <div className="max-h-52 overflow-y-auto custom-scrollbar">
-          {filtered.map(c => (
-            <button key={c.code} onClick={() => { onSelect(c); setOpen(false); setSearch(''); }}
-              className={`flex items-center gap-3 w-full px-4 py-2.5 hover:bg-white/5 transition-colors ${selected.code === c.code ? 'bg-emerald-500/10' : ''}`}>
-              {type === 'fiat' ? <FlagIcon colors={c.flagColors} /> : <CryptoIcon color={c.color} code={c.code} />}
-              <div className="text-left">
-                <p className="text-white text-sm font-medium">{c.code}</p>
-                <p className="text-gray-400 text-xs">{c.name}</p>
-              </div>
-            </button>
-          ))}
+          {filtered.map((c, i) => {
+            const key = c.displayCode || c.code;
+            const isSelected = (selected.displayCode || selected.code) === key;
+            return (
+              <button key={key + i} onClick={() => { onSelect(c); setOpen(false); setSearch(''); }}
+                className={`flex items-center gap-3 w-full px-4 py-2.5 hover:bg-white/5 transition-colors ${isSelected ? 'bg-emerald-500/10' : ''}`}>
+                {type === 'fiat' ? <FlagIcon colors={c.flagColors} /> : <CryptoIcon color={c.color} code={c.code} />}
+                <div className="text-left flex-1">
+                  <p className="text-white text-sm font-medium">{c.displayCode || c.code}</p>
+                  <p className="text-gray-400 text-xs">{c.name}</p>
+                </div>
+                {c.chain && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700/60 text-gray-400">{c.chain}</span>}
+              </button>
+            );
+          })}
         </div>
       </PopoverContent>
     </Popover>
