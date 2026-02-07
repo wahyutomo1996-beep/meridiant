@@ -125,8 +125,11 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
         <div className="flex gap-8 mb-6">
           {['transfer', 'withdraw'].map(tab => (
             <button key={tab} onClick={() => handleTabSwitch(tab)}
-              className={`relative pb-3 text-sm font-medium capitalize transition-colors ${activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
-              {tab === 'transfer' ? 'Transfer' : 'Withdraw'}
+              className={`relative pb-3 text-sm font-medium transition-colors ${activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+              <span className="capitalize">{tab === 'transfer' ? 'Transfer' : 'Withdraw'}</span>
+              <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab ? 'bg-emerald-500/15 text-emerald-400' : 'bg-gray-700/40 text-gray-500'}`}>
+                {tab === 'transfer' ? 'On Chain' : 'Off Chain'}
+              </span>
               {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400 rounded-full" />}
             </button>
           ))}
