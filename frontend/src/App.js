@@ -157,14 +157,33 @@ function App() {
             onSignIn={() => setActiveModal("signin")}
             onSignUp={() => setActiveModal("signup")}
             onSignOut={handleSignOut}
+            onNavigate={setCurrentPage}
           />
 
-          <main className="flex-1 flex items-center justify-center px-4 pb-20">
-            <TransferForm
-              isLoggedIn={isLoggedIn}
-              walletConnected={walletConnected}
-              onTransfer={handleTransfer}
-            />
+          <main className={`flex-1 flex ${currentPage === 'home' ? 'items-center justify-center' : 'items-start pt-6'} px-4 pb-20`}>
+            {currentPage === 'home' && (
+              <TransferForm
+                isLoggedIn={isLoggedIn}
+                walletConnected={walletConnected}
+                onTransfer={handleTransfer}
+              />
+            )}
+            {currentPage === 'profile' && (
+              <MyProfilePage user={user} onBack={() => setCurrentPage('home')} onUpdate={(u) => setUser(prev => ({ ...prev, ...u }))} />
+            )}
+            {currentPage === 'wallet-account' && (
+              <WalletAccountPage
+                walletConnected={walletConnected} connectedWallet={connectedWallet} walletAddress={walletAddress}
+                onConnectWallet={() => setActiveModal("wallet")} onDisconnectWallet={handleDisconnectWallet}
+                onBack={() => setCurrentPage('home')}
+              />
+            )}
+            {currentPage === 'withdrawal-account' && (
+              <WithdrawalAccountPage onBack={() => setCurrentPage('home')} />
+            )}
+            {currentPage === 'history' && (
+              <HistoryTransactionsPage onBack={() => setCurrentPage('home')} />
+            )}
           </main>
 
           <footer className="px-6 lg:px-10 py-4 flex flex-wrap items-center justify-between gap-4 text-gray-500 text-xs border-t border-gray-800/30">
