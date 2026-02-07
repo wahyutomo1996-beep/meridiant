@@ -286,6 +286,82 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def seed_test_user():
+    existing = await db.users.find_one({"email": "test@meridiant.com"})
+    if not existing:
+        user_id = str(uuid.uuid4())
+        await db.users.insert_one({
+            "_id": user_id,
+            "name": "Meridiant Tester",
+            "email": "test@meridiant.com",
+            "password_hash": hash_password("Test1234!"),
+            "wallet_connected": False,
+            "wallet_address": None,
+            "wallet_name": None,
+            "phone": "",
+            "bank_accounts": [],
+            "created_at": datetime.utcnow().isoformat(),
+        })
+        logger.info("Seeded test user: test@meridiant.com / Test1234!")
+
+# ============ PROFILE ROUTES ============
+
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+
+@api_router.put("/profile")
+async def update_profile(data: ProfileUpdate, user=Depends(get_current_user)):
+    updates = {}
+    if data.name: updates["name"] = data.name
+    if data.phone is not None: updates["phone"] = data.phone
+    if updates:
+        await db.users.update_one({"_id": user["_id"]}, {"$set": updates})
+    updated = await db.users.find_one({"_id": user["_id"]})
+    return {
+        "id": updated["_id"], "name": updated["name"], "email": updated["email"],
+        "phone": updated.get("phone", ""),
+        "wallet_connected": updated.get("wallet_connected", False),
+        "wallet_address": updated.get("wallet_address"),
+        "wallet_name": updated.get("wallet_name"),
+        "created_at": updated.get("created_at", ""),
+    }
+
+# ============ BANK ACCOUNT ROUTES ============
+
+class BankAccountCreate(BaseModel):
+    bank_name: str
+    account_number: str
+    account_holder: str
+    account_type: str = "bank"  # bank, ewallet, qris
+
+@api_router.post("/bank-accounts")
+async def add_bank_account(data: BankAccountCreate, user=Depends(get_current_user)):
+    account = {
+        "id": str(uuid.uuid4())[:8],
+        "bank_name": data.bank_name,
+        "account_number": data.account_number,
+        "account_holder": data.account_holder,
+        "account_type": data.account_type,
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    await db.users.update_one({"_id": user["_id"]}, {"$push": {"bank_accounts": account}})
+    return account
+
+@api_router.get("/bank-accounts")
+async def get_bank_accounts(user=Depends(get_current_user)):
+    u = await db.users.find_one({"_id": user["_id"]})
+    return {"accounts": u.get("bank_accounts", [])}
+
+@api_router.delete("/bank-accounts/{account_id}")
+async def delete_bank_account(account_id: str, user=Depends(get_current_user)):
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$pull": {"bank_accounts": {"id": account_id}}}
+    )
+    return {"deleted": True}
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
