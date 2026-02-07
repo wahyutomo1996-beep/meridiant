@@ -107,60 +107,92 @@ user_problem_statement: "Meridiant - Crypto On Chain / Off Chain platform (like 
 backend:
   - task: "Auth - Sign Up"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "testing"
+        -comment: "POST /api/auth/signup tested successfully. Creates user with JWT token, handles duplicate emails correctly (returns 400), generates UUID for user ID, hashes passwords properly."
   - task: "Auth - Sign In"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "testing"
+        -comment: "POST /api/auth/signin tested successfully. Validates credentials, returns JWT token and user data, correctly rejects wrong passwords (returns 401)."
   - task: "Auth - Get Me (JWT protected)"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "testing"
+        -comment: "GET /api/auth/me tested successfully. JWT authentication working, returns user profile data, correctly rejects unauthenticated requests (returns 401)."
   - task: "Wallet - Connect"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "testing"
+        -comment: "POST /api/wallet/connect tested successfully. Generates mock wallet addresses, updates user wallet status, requires JWT auth, returns wallet info."
   - task: "Wallet - Disconnect"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "testing"
+        -comment: "DELETE /api/wallet/disconnect tested successfully. Properly clears wallet connection, requires JWT auth, returns confirmation."
   - task: "Transactions - Create"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "testing"
+        -comment: "POST /api/transactions tested successfully. Creates transactions with proper validation, requires wallet connection (returns 400 if not connected), generates transaction IDs, marks as completed status."
   - task: "Transactions - List"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "testing"
+        -comment: "GET /api/transactions tested successfully. Returns user's transactions in descending order, includes all transaction details, requires JWT auth."
   - task: "Exchange Rates"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "low"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "testing"
+        -comment: "GET /api/exchange-rates tested successfully. Returns comprehensive rate data for 16 currency pairs (IDR, ETH, BTC, USDT, USDC, BNB, MATIC, SOL, IDRT), no authentication required."
 
 metadata:
   created_by: "main_agent"
