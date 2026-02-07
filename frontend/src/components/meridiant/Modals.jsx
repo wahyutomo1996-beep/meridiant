@@ -258,6 +258,14 @@ export const SignUpModal = ({ open, onClose, onSignUp, onSwitchToSignIn }) => {
             Already have an account? <button type="button" onClick={onSwitchToSignIn} className="text-emerald-400 hover:underline">Sign in</button>
           </p>
         </form>
+        <div className="relative my-2">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-700/50" /></div>
+          <div className="relative flex justify-center text-xs"><span className="px-3 text-gray-500" style={{ background: '#1a2235' }}>OR</span></div>
+        </div>
+        <button onClick={() => { setLoading(true); setTimeout(() => { onSignUp('Google User', 'google-user@gmail.com', 'google'); setLoading(false); }, 800); }}
+          className="w-full py-3 rounded-xl border border-gray-600/50 text-white font-medium text-sm transition-colors hover:bg-white/5 flex items-center justify-center gap-3">
+          <GoogleIcon /> Continue with Google
+        </button>
       </DialogContent>
     </Dialog>
   );
