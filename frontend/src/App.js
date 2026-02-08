@@ -86,17 +86,15 @@ function App() {
     setWalletConnected(false);
   };
 
-  const handleConnectWallet = async (wallet) => {
+  const handleConnectWallet = async (wallet, address) => {
+    const addr = address || '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
     try {
       const res = await walletAPI.connect(wallet.id, wallet.name);
-      const { wallet_address, wallet_name } = res.data;
-      setConnectedWallet({ ...wallet, name: wallet_name });
-      setWalletAddress(wallet_address);
+      setConnectedWallet({ ...wallet, name: res.data.wallet_name });
+      setWalletAddress(addr);
       setWalletConnected(true);
       setActiveModal(null);
     } catch {
-      // Fallback to local mock if not logged in
-      const addr = "0x" + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
       setConnectedWallet(wallet);
       setWalletAddress(addr);
       setWalletConnected(true);
