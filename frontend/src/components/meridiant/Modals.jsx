@@ -157,6 +157,9 @@ export const WalletConnectModal = ({ open, onClose, onConnect }) => {
           })}
         </div>
 
+        {/* Error */}
+        {error && <div className="px-5 pb-2"><p className="text-amber-400 text-xs text-center bg-amber-500/10 rounded-lg py-2 px-3">{error}</p></div>}
+
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-700/30 text-center">
           <p className="text-gray-500 text-xs">
