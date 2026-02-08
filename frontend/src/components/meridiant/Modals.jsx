@@ -37,14 +37,59 @@ const ChainBadge = ({ chain }) => {
 export const WalletConnectModal = ({ open, onClose, onConnect }) => {
   const [connecting, setConnecting] = useState(null);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState('');
 
   const filtered = wallets.filter(w =>
     w.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleConnect = (wallet) => {
+  const getProvider = (walletId) => {
+    if (typeof window === 'undefined') return null;
+    switch (walletId) {
+      case 'metamask': return window.ethereum?.isMetaMask ? window.ethereum : null;
+      case 'okx': return window.okxwallet || null;
+      case 'phantom': return window.phantom?.ethereum || null;
+      case 'solflare': return window.solflare || null;
+      default: return window.ethereum || null;
+    }
+  };
+
+  const handleConnect = async (wallet) => {
     setConnecting(wallet.id);
-    setTimeout(() => { onConnect(wallet); setConnecting(null); setSearch(''); }, 1200);
+    setError('');
+    try {
+      const provider = getProvider(wallet.id);
+      if (provider && wallet.id !== 'solflare') {
+        // EVM wallet connection
+        const accounts = await provider.request({ method: 'eth_requestAccounts' });
+        if (accounts && accounts.length > 0) {
+          onConnect(wallet, accounts[0]);
+          setSearch('');
+          setConnecting(null);
+          return;
+        }
+      } else if (provider && wallet.id === 'solflare') {
+        // Solana wallet
+        try {
+          const resp = await provider.connect();
+          if (resp?.publicKey) {
+            onConnect(wallet, resp.publicKey.toString());
+            setSearch('');
+            setConnecting(null);
+            return;
+          }
+        } catch { /* fallthrough to mock */ }
+      }
+      // Fallback: mock connection if wallet not installed
+      const mockAddr = '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      onConnect(wallet, mockAddr);
+      setSearch('');
+    } catch (err) {
+      setError(err?.message?.includes('rejected') ? 'Connection rejected by user' : 'Wallet not detected. Using demo mode.');
+      const mockAddr = '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      setTimeout(() => { onConnect(wallet, mockAddr); setSearch(''); setError(''); }, 1500);
+    }
+    setConnecting(null);
   };
 
   return (
