@@ -1,0 +1,67 @@
+{
+  "summary": "Completed comprehensive testing of Meridiant crypto platform v2.0. All 3 major features verified: CoinGecko live prices, Google OAuth UI, On-chain checkout for BSC. Backend 17/17 tests passed, Frontend all flows working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_meridiant_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_meridiant_api.py"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": "test@meridiant.com / Test1234!",
+  "seed_data_creation": "Test user auto-seeded on startup",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All requested features tested and working. On-chain checkout only shows for withdraw (crypto→fiat) flows, not transfer (fiat→crypto). Wallet balances in withdraw tab are MOCKED in mockData.js.",
+  "test_results": {
+    "backend_api_tests": {
+      "health_check": "PASSED - API v2.0.0 responding",
+      "prices_endpoint": "PASSED - CoinGecko source, 60+ rate pairs including IDRT.BSC, USDT.BSC",
+      "signin_test_user": "PASSED - test@meridiant.com / Test1234! works",
+      "signin_invalid": "PASSED - Returns 401 for wrong credentials",
+      "google_session_endpoint": "PASSED - Exists, returns 401 for invalid session_id",
+      "signup_new_user": "PASSED - Creates new account",
+      "signup_duplicate": "PASSED - Rejects duplicate email with 400",
+      "transactions_with_chain_hash": "PASSED - Accepts tx_hash and chain fields",
+      "transactions_without_hash": "PASSED - Status pending when no tx_hash",
+      "transactions_auth": "PASSED - Requires authentication (401)",
+      "wallet_connect": "PASSED - Connects wallet with address",
+      "wallet_disconnect": "PASSED - Disconnects wallet",
+      "auth_me": "PASSED - Returns user data with valid token"
+    },
+    "frontend_ui_tests": {
+      "signin_modal": "PASSED - Opens, has Google button, credentials work",
+      "google_signin_button": "PASSED - 'Continue with Google' button present in Sign-In modal",
+      "google_signup_button": "PASSED - 'Continue with Google' button present in Sign-Up modal",
+      "live_prices": "PASSED - Transfer form uses live rates from /api/prices (IDR→IDRT.BSC = 1:1)",
+      "wallet_connect": "PASSED - MetaMask can be connected (mock mode when not installed)",
+      "transfer_tab_flow": "PASSED - IDR→IDRT.BSC transfer flow opens checkout modal",
+      "withdraw_tab_flow": "PASSED - IDRT.BSC→IDR withdraw flow opens checkout with on-chain support",
+      "percentage_buttons": "PASSED - 25%, 50%, 75%, 100% buttons work correctly in withdraw tab",
+      "onchain_indicator": "PASSED - 'On-Chain Transfer' indicator shown for BSC tokens in checkout",
+      "onchain_button": "PASSED - 'Sign & Send On-Chain' button shown for BSC withdraw"
+    }
+  },
+  "mocked_apis": {
+    "wallet_balances": "MOCKED - Balances in mockData.js (e.g., 5,000,000 IDRT, 2,500,000 IDRT.BSC)"
+  },
+  "feature_verification": {
+    "coingecko_prices": "✓ Live rates from CoinGecko with fallback, 60+ rate pairs",
+    "google_oauth_ui": "✓ 'Continue with Google' button in both Sign-In and Sign-Up modals, redirects to auth.emergentagent.com",
+    "onchain_bsc_support": "✓ Checkout shows 'On-Chain Transfer' indicator and 'Sign & Send On-Chain' button for BSC tokens"
+  }
+}
