@@ -170,6 +170,7 @@ COINGECKO_MAP = {
     "chainlink": "LINK",
     "uniswap": "UNI",
     "wrapped-bitcoin": "WBTC",
+    "the-open-network": "TON",
 }
 
 CHAIN_SUFFIXES = {
