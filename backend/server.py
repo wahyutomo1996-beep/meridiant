@@ -192,34 +192,35 @@ async def get_live_prices():
                 f"https://api.coingecko.com/api/v3/simple/price?ids={ids}&vs_currencies=idr",
                 timeout=10
             )
+            if resp.status_code != 200:
+                raise Exception(f"CoinGecko returned {resp.status_code}")
             data = resp.json()
+            if "status" in data and "error_code" in data.get("status", {}):
+                raise Exception(f"CoinGecko error: {data['status'].get('error_message')}")
 
-        rates = {}
-        # IDRT pegged to IDR
-        for suffix in ["", ".BSC", ".Poly"]:
-            rates[f"IDR_IDRT{suffix}"] = 1
-            rates[f"IDRT{suffix}_IDR"] = 1
-
+        price_map = {}
         for cg_id, symbol in COINGECKO_MAP.items():
             if cg_id in data and "idr" in data[cg_id]:
-                idr_price = data[cg_id]["idr"]
-                rates[f"{symbol}_IDR"] = idr_price
-                rates[f"IDR_{symbol}"] = 1 / idr_price if idr_price else 0
-                # Chain variants
-                for suffix in CHAIN_SUFFIXES.get(symbol, []):
-                    rates[f"{symbol}{suffix}_IDR"] = idr_price
-                    rates[f"IDR_{symbol}{suffix}"] = 1 / idr_price if idr_price else 0
+                price_map[symbol] = data[cg_id]["idr"]
 
+        if len(price_map) < 3:
+            raise Exception("Too few prices returned")
+
+        rates = build_rates(price_map)
         result = {"rates": rates, "timestamp": now, "source": "coingecko"}
         price_cache["data"] = result
         price_cache["timestamp"] = now
         return result
 
     except Exception as e:
-        logger.error(f"CoinGecko error: {e}")
+        logger.warning(f"CoinGecko fetch failed: {e}, using fallback")
         if price_cache["data"]:
             return price_cache["data"]
-        return {"rates": {}, "timestamp": now, "source": "error"}
+        rates = build_rates(FALLBACK_IDR_PRICES)
+        result = {"rates": rates, "timestamp": now, "source": "fallback"}
+        price_cache["data"] = result
+        price_cache["timestamp"] = now
+        return result
 
 # ============ AUTH ROUTES ============
 
