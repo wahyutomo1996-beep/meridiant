@@ -255,21 +255,21 @@ export const HistoryTransactionsPage = ({ onBack }) => {
         ) : (
           <div className="space-y-2">
             {txs.map(tx => (
-              <div key={tx.id} className="flex items-center gap-3 rounded-xl px-4 py-3.5" style={{ background: '#0c1120' }}>
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${tx.type === 'transfer' ? 'bg-emerald-500/15' : 'bg-amber-500/15'}`}>
-                  <ArrowDownUp className={`w-4 h-4 ${tx.type === 'transfer' ? 'text-emerald-400' : 'text-amber-400'}`} />
+              <div key={tx.id} className="flex items-center gap-2 sm:gap-3 rounded-xl px-3 sm:px-4 py-3.5" style={{ background: '#0c1120' }}>
+                <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${tx.type === 'transfer' ? 'bg-emerald-500/15' : 'bg-amber-500/15'}`}>
+                  <ArrowDownUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${tx.type === 'transfer' ? 'text-emerald-400' : 'text-amber-400'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-white text-sm font-medium capitalize">{tx.type}</p>
-                    <p className="text-emerald-400 text-sm font-medium">{tx.to_amount} {tx.to_currency}</p>
+                  <div className="flex items-center justify-between gap-1">
+                    <p className="text-white text-xs sm:text-sm font-medium capitalize truncate">{tx.type}</p>
+                    <p className="text-emerald-400 text-xs sm:text-sm font-medium whitespace-nowrap">{tx.to_amount} {tx.to_currency}</p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-gray-500 text-xs">{new Date(tx.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                    <p className="text-gray-400 text-xs">-{tx.from_amount} {tx.from_currency}</p>
+                  <div className="flex items-center justify-between gap-1">
+                    <p className="text-gray-500 text-[10px] sm:text-xs truncate">{new Date(tx.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-gray-400 text-[10px] sm:text-xs whitespace-nowrap">-{tx.from_amount} {tx.from_currency}</p>
                   </div>
                 </div>
-                <div className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${tx.status === 'completed' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}`}>
+                <div className={`text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-full flex-shrink-0 ${tx.status === 'completed' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}`}>
                   {tx.status}
                 </div>
                 {tx.tx_hash && (
