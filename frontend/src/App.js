@@ -16,6 +16,8 @@ import { MyProfilePage, WalletAccountPage, WithdrawalAccountPage, HistoryTransac
 import { authAPI, walletAPI, pricesAPI } from "@/lib/api";
 import { exchangeRates as fallbackRates } from "@/data/mockData";
 import { Shield, Zap, Globe, ChevronDown, ChevronUp } from "lucide-react";
+import ChatbotWidget from "@/components/meridiant/ChatbotWidget";
+import AdminDashboard from "@/components/meridiant/AdminDashboard";
 
 // ========== HERO SECTION ==========
 const HeroSection = ({ onGetStarted }) => {
