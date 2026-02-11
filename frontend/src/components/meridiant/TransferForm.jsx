@@ -405,7 +405,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
 
         <div className="mb-4 rounded-xl px-4 py-3" style={{ background: '#0c1120' }}>
           <p className="text-gray-400 text-sm">
-            You'll receive an estimate of <span className="text-emerald-400 font-medium">{toAmount || '0'}</span> for <span className="text-emerald-400 font-medium">{fromAmount || '0'} {toCurrency.displayCode || toCurrency.code}</span>
+            You'll receive an estimate of <span className="text-emerald-400 font-medium">{toAmount || '0'} {toCurrency.displayCode || toCurrency.code}</span> for <span className="text-emerald-400 font-medium">{formatDisplayInput(fromAmount) || '0'} {fromCurrency.displayCode || fromCurrency.code}</span>
           </p>
         </div>
 
