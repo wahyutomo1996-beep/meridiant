@@ -452,7 +452,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
         </div>
 
         <div className="mb-4">
-          <label className="text-gray-400 text-sm mb-2 block">{activeTab === 'transfer' ? 'Transfer' : 'From'}</label>
+          <label className="text-sm mb-2 block" style={{ color: 'var(--text-secondary)' }}>{activeTab === 'transfer' ? 'Transfer' : 'From'}</label>
           <div className={`flex items-center gap-2 rounded-xl px-3 py-3 border overflow-hidden ${amountError ? 'border-red-500/40' : 'border-transparent'}`} style={{ background: 'var(--card-inner)' }}>
             <CurrencyBtn currency={fromCurrency} type={fromType} onClick={() => setShowFromPicker(true)} />
             <input type="number" inputMode="decimal" placeholder="0" value={fromAmount} onChange={e => setFromAmount(e.target.value)}
