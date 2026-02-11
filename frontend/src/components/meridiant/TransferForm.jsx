@@ -513,7 +513,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
         {activeTab === 'transfer' ? (
           <div className="mb-4">
-            <label className="text-gray-400 text-sm mb-2 block">Transfer method</label>
+            <label className="text-sm mb-2 block" style={{ color: 'var(--text-secondary)' }}>Transfer method</label>
             <SelectedMethodCard item={selectedMethod} onClick={() => setShowMethodPicker(true)} placeholder="Pilih metode transfer" />
           </div>
         ) : (
