@@ -82,31 +82,30 @@ const FAQPage = ({ onBack }) => {
       <button onClick={onBack} className="text-emerald-400 text-sm hover:text-emerald-300 mb-6 flex items-center gap-1 btn-press" data-testid="faq-back-btn">
         ← Kembali
       </button>
-      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+      <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif", color: 'var(--text-primary)' }}>
         Pertanyaan Umum
       </h2>
-      <p className="text-gray-400 text-sm mb-8">Jawaban untuk pertanyaan yang sering ditanyakan.</p>
+      <p className="text-sm mb-8" style={{ color: 'var(--text-secondary)' }}>Jawaban untuk pertanyaan yang sering ditanyakan.</p>
 
       <div className="space-y-3">
         {faqs.map((faq, i) => (
           <div key={i}
-            className="rounded-xl border border-gray-700/30 overflow-hidden transition-all duration-200"
-            style={{ background: openIdx === i ? 'rgba(21, 28, 44, 0.95)' : 'rgba(21, 28, 44, 0.6)' }}
+            className="rounded-xl overflow-hidden transition-all duration-200 glass-card"
             data-testid={`faq-item-${i}`}
           >
             <button
               onClick={() => setOpenIdx(openIdx === i ? null : i)}
               className="flex items-center justify-between w-full px-5 py-4 text-left"
             >
-              <span className="text-white text-sm font-medium pr-4">{faq.q}</span>
+              <span className="text-sm font-medium pr-4" style={{ color: 'var(--text-primary)' }}>{faq.q}</span>
               {openIdx === i
                 ? <ChevronUp className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                : <ChevronDown className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                : <ChevronDown className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
               }
             </button>
             {openIdx === i && (
               <div className="px-5 pb-4 anim-fade-in">
-                <p className="text-gray-400 text-sm leading-relaxed">{faq.a}</p>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{faq.a}</p>
               </div>
             )}
           </div>
