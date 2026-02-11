@@ -362,7 +362,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
             return (
               <div className="mt-2">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-500 text-xs">Available: <span className="text-gray-300 font-medium">{formatAmount(bal)} {balKey}</span></span>
+                  <span className="text-gray-500 text-xs">Available: <span className="text-gray-300 font-medium">{formatAmount(bal)} {balKey}</span>{isReal && <span className="text-emerald-500 ml-1 text-[10px]">LIVE</span>}</span>
                 </div>
                 <div className="flex gap-2">
                   {[25, 50, 75, 100].map(pct => {
