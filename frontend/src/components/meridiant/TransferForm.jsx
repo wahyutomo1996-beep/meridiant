@@ -62,7 +62,7 @@ const formatAmount = (value, isFiat = false) => {
   if (isNaN(num) || num === 0) return '0';
 
   if (isFiat) {
-    return Math.round(num).toLocaleString('id-ID');
+    return Math.round(num).toLocaleString('en-US');
   }
 
   const abs = Math.abs(num);
