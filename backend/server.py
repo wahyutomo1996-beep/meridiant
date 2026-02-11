@@ -174,7 +174,7 @@ COINGECKO_MAP = {
 
 CHAIN_SUFFIXES = {
     "ETH": [".Base", ".Arb", ".OP"],
-    "USDT": [".BSC", ".Arb", ".Base", ".Sol", ".Poly", ".OP", ".Avax"],
+    "USDT": [".BSC", ".Arb", ".Base", ".Sol", ".Poly", ".OP", ".Avax", ".TON"],
     "USDC": [".Base", ".Arb", ".Sol", ".BSC", ".Poly", ".OP", ".Avax"],
 }
 
