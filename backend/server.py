@@ -37,6 +37,9 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@meridiant.com')
 MIN_AMOUNT_IDR = 10000
+TRADE_FEE_RATE = 0.003  # 0.3%
+PLATFORM_FEE_RATE = 0.002  # 0.2%
+PLATFORM_FEE_THRESHOLD = 50000  # Rp 50,000
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 app = FastAPI()
