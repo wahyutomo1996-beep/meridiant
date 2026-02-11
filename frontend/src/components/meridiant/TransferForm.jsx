@@ -18,6 +18,7 @@ const networks = [
   { id: 'Polygon', name: 'Polygon', color: '#8247E5' },
   { id: 'Avalanche', name: 'Avalanche', color: '#E84142' },
   { id: 'Bitcoin', name: 'Bitcoin', color: '#F7931A' },
+  { id: 'TON', name: 'TON', color: '#0098EA' },
 ];
 
 const popularTokenCodes = ['ETH', 'USDC', 'USDT', 'WBTC', 'SOL'];
