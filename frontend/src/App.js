@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "@/App.css";
-import { BrowserRouter, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import Background from "@/components/meridiant/Background";
 import Navbar from "@/components/meridiant/Navbar";
 import TransferForm from "@/components/meridiant/TransferForm";
@@ -13,50 +13,10 @@ import {
   CompleteModal,
 } from "@/components/meridiant/Modals";
 import { MyProfilePage, WalletAccountPage, WithdrawalAccountPage, HistoryTransactionsPage } from "@/components/meridiant/ProfilePages";
-import { authAPI, walletAPI, transactionAPI, pricesAPI } from "@/lib/api";
+import { authAPI, walletAPI, pricesAPI } from "@/lib/api";
 import { exchangeRates as fallbackRates } from "@/data/mockData";
 
-// REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-function AuthCallback({ onAuthSuccess }) {
-  const hasProcessed = useRef(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (hasProcessed.current) return;
-    hasProcessed.current = true;
-
-    const hash = window.location.hash;
-    const match = hash.match(/session_id=([^&]+)/);
-    if (!match) { navigate('/', { replace: true }); return; }
-
-    const sessionId = match[1];
-    (async () => {
-      try {
-        const res = await authAPI.googleSession(sessionId);
-        const { token, user } = res.data;
-        localStorage.setItem('meridiant_token', token);
-        onAuthSuccess(user);
-      } catch (e) {
-        console.error('Google auth failed:', e);
-      }
-      // Clear hash and redirect
-      window.history.replaceState(null, '', window.location.pathname);
-      navigate('/', { replace: true });
-    })();
-  }, [navigate, onAuthSuccess]);
-
-  return (
-    <div className="fixed inset-0 bg-[#0a0f1a] flex items-center justify-center z-50">
-      <div className="text-center">
-        <div className="w-12 h-12 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin mx-auto mb-4" />
-        <p className="text-white text-sm">Signing in with Google...</p>
-      </div>
-    </div>
-  );
-}
-
 function AppContent() {
-  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [walletConnected, setWalletConnected] = useState(false);
@@ -66,6 +26,7 @@ function AppContent() {
   const [transactionData, setTransactionData] = useState(null);
   const [currentPage, setCurrentPage] = useState("home");
   const [liveRates, setLiveRates] = useState(fallbackRates);
+  const [realBalances, setRealBalances] = useState(null);
 
   const handleAuthSuccess = useCallback((u) => {
     setUser({ name: u.name, email: u.email, picture: u.picture });
@@ -77,48 +38,19 @@ function AppContent() {
     }
   }, []);
 
-  // Check for Google Auth session_id in URL hash
-  if (location.hash?.includes('session_id=')) {
-    return <AuthCallback onAuthSuccess={handleAuthSuccess} />;
-  }
-
-  return (
-    <AppInner
-      isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}
-      user={user} setUser={setUser}
-      walletConnected={walletConnected} setWalletConnected={setWalletConnected}
-      connectedWallet={connectedWallet} setConnectedWallet={setConnectedWallet}
-      walletAddress={walletAddress} setWalletAddress={setWalletAddress}
-      activeModal={activeModal} setActiveModal={setActiveModal}
-      transactionData={transactionData} setTransactionData={setTransactionData}
-      currentPage={currentPage} setCurrentPage={setCurrentPage}
-      liveRates={liveRates} setLiveRates={setLiveRates}
-      handleAuthSuccess={handleAuthSuccess}
-    />
-  );
-}
-
-function AppInner({
-  isLoggedIn, setIsLoggedIn, user, setUser,
-  walletConnected, setWalletConnected, connectedWallet, setConnectedWallet,
-  walletAddress, setWalletAddress, activeModal, setActiveModal,
-  transactionData, setTransactionData, currentPage, setCurrentPage,
-  liveRates, setLiveRates, handleAuthSuccess,
-}) {
   // Restore session on mount
-  const restoreSession = useCallback(async () => {
+  useEffect(() => {
     const token = localStorage.getItem("meridiant_token");
     if (!token) return;
-    try {
-      const res = await authAPI.getMe();
-      const u = res.data;
-      handleAuthSuccess(u);
-    } catch {
-      localStorage.removeItem("meridiant_token");
-    }
+    (async () => {
+      try {
+        const res = await authAPI.getMe();
+        handleAuthSuccess(res.data);
+      } catch {
+        localStorage.removeItem("meridiant_token");
+      }
+    })();
   }, [handleAuthSuccess]);
-
-  useEffect(() => { restoreSession(); }, [restoreSession]);
 
   // Fetch live prices
   useEffect(() => {
@@ -133,7 +65,30 @@ function AppInner({
     fetchPrices();
     const interval = setInterval(fetchPrices, 30000);
     return () => clearInterval(interval);
-  }, [setLiveRates]);
+  }, []);
+
+  // Fetch real wallet balances when wallet is connected
+  useEffect(() => {
+    if (!walletAddress || !walletConnected) return;
+    (async () => {
+      try {
+        const res = await walletAPI.balances(walletAddress);
+        if (res.data?.balances) setRealBalances(res.data.balances);
+      } catch { /* keep mocked */ }
+    })();
+  }, [walletAddress, walletConnected]);
+
+  const handleGoogleCredential = async (credential) => {
+    try {
+      const res = await authAPI.googleAuth(credential);
+      const { token, user: u } = res.data;
+      localStorage.setItem("meridiant_token", token);
+      handleAuthSuccess(u);
+      setActiveModal(null);
+    } catch (err) {
+      throw new Error(err.response?.data?.detail || "Google sign in failed");
+    }
+  };
 
   const handleSignIn = async (email, password) => {
     try {
@@ -166,6 +121,7 @@ function AppInner({
     setConnectedWallet(null);
     setWalletAddress("");
     setWalletConnected(false);
+    setRealBalances(null);
   };
 
   const handleConnectWallet = async (wallet, address) => {
@@ -188,6 +144,7 @@ function AppInner({
     setConnectedWallet(null);
     setWalletAddress("");
     setWalletConnected(false);
+    setRealBalances(null);
   };
 
   const handleTransfer = (data) => {
@@ -202,6 +159,7 @@ function AppInner({
     setActiveModal("processing");
     try {
       if (transactionData) {
+        const { transactionAPI } = await import("@/lib/api");
         await transactionAPI.create({
           type: transactionData.type,
           from_currency: transactionData.from.currency.displayCode || transactionData.from.currency.code,
@@ -245,6 +203,7 @@ function AppInner({
               walletAddress={walletAddress}
               connectedWallet={connectedWallet}
               liveRates={liveRates}
+              realBalances={realBalances}
               onTransfer={handleTransfer}
             />
           )}
@@ -277,8 +236,8 @@ function AppInner({
       </div>
 
       <WalletConnectModal open={activeModal === "wallet"} onClose={() => setActiveModal(null)} onConnect={handleConnectWallet} />
-      <SignInModal open={activeModal === "signin"} onClose={() => setActiveModal(null)} onSignIn={handleSignIn} onSwitchToSignUp={() => setActiveModal("signup")} />
-      <SignUpModal open={activeModal === "signup"} onClose={() => setActiveModal(null)} onSignUp={handleSignUp} onSwitchToSignIn={() => setActiveModal("signin")} />
+      <SignInModal open={activeModal === "signin"} onClose={() => setActiveModal(null)} onSignIn={handleSignIn} onGoogleCredential={handleGoogleCredential} onSwitchToSignUp={() => setActiveModal("signup")} />
+      <SignUpModal open={activeModal === "signup"} onClose={() => setActiveModal(null)} onSignUp={handleSignUp} onGoogleCredential={handleGoogleCredential} onSwitchToSignIn={() => setActiveModal("signin")} />
       <CheckoutModal
         open={activeModal === "checkout"} onClose={() => setActiveModal(null)}
         data={transactionData} onConfirm={handleConfirmTransaction}
