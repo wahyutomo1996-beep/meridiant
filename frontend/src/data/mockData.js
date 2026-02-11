@@ -185,6 +185,7 @@ export const exchangeRates = {
   USDC_IDR: 16400,
   'USDC.Base_IDR': 16400,
   'USDC.Arb_IDR': 16400,
+  'USDC.Sol_IDR': 16400,
   BNB_IDR: 9700000,
   SOL_IDR: 2400000,
   MATIC_IDR: 6500,
