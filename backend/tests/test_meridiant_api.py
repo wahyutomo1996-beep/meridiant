@@ -107,26 +107,26 @@ class TestAuthSignIn:
         print("✓ Non-existent user correctly rejected")
 
 
-class TestGoogleSession:
-    """Google OAuth session endpoint tests"""
+class TestGoogleAuth:
+    """Google OAuth endpoint tests (Direct GSI implementation)"""
     
-    def test_google_session_invalid_session_id(self):
-        """Test /api/auth/google-session returns 401 for invalid session_id"""
-        response = requests.post(f"{BASE_URL}/api/auth/google-session", json={
-            "session_id": "invalid-session-id-12345"
+    def test_google_auth_invalid_credential(self):
+        """Test /api/auth/google returns 401 for invalid Google credential"""
+        response = requests.post(f"{BASE_URL}/api/auth/google", json={
+            "credential": "invalid-google-id-token-12345"
         })
         assert response.status_code == 401
         data = response.json()
         assert "detail" in data
-        print(f"✓ Invalid Google session correctly rejected: {data['detail']}")
+        print(f"✓ Invalid Google credential correctly rejected: {data['detail']}")
     
-    def test_google_session_endpoint_exists(self):
-        """Test that /api/auth/google-session endpoint exists and accepts POST"""
-        # Empty body should still trigger the endpoint (not 404)
-        response = requests.post(f"{BASE_URL}/api/auth/google-session", json={})
+    def test_google_auth_endpoint_exists(self):
+        """Test that /api/auth/google endpoint exists and accepts POST"""
+        # Empty body should trigger validation error (422), not 404
+        response = requests.post(f"{BASE_URL}/api/auth/google", json={})
         # Should be 422 (validation error for missing field) or 401, not 404
-        assert response.status_code != 404, "Google session endpoint does not exist"
-        print(f"✓ Google session endpoint exists (status: {response.status_code})")
+        assert response.status_code != 404, "Google auth endpoint does not exist"
+        print(f"✓ Google auth endpoint exists (status: {response.status_code})")
 
 
 class TestAuthSignUp:
