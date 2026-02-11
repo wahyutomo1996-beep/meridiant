@@ -8,7 +8,7 @@ import os
 import uuid
 
 # Use frontend env URL for testing public endpoints
-BASE_URL = "https://payment-ui-verify.preview.emergentagent.com"
+BASE_URL = "https://ton-mobile-app.preview.emergentagent.com"
 
 # Test user credentials
 TEST_EMAIL = "test@meridiant.com"
