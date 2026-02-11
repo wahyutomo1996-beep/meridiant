@@ -169,7 +169,7 @@ export const WalletConnectModal = ({ open, onClose, onConnect }) => {
 };
 
 // ========== SIGN IN MODAL ==========
-export const SignInModal = ({ open, onClose, onSignIn, onSwitchToSignUp }) => {
+export const SignInModal = ({ open, onClose, onSignIn, onGoogleCredential, onSwitchToSignUp }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
