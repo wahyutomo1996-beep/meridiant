@@ -146,7 +146,7 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
         </div>
 
         <div className="px-5 pb-3 flex-shrink-0">
-          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-700/50" style={{ background: '#0c1120' }}>
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-700/50" style={{ background: 'var(--card-inner)' }}>
             <Search className="w-4 h-4 text-gray-500 flex-shrink-0" />
             <input type="text" placeholder="Search tokens..." value={search} onChange={e => setSearch(e.target.value)}
               className="bg-transparent text-white text-sm outline-none placeholder:text-gray-500 w-full" />
@@ -318,7 +318,7 @@ const SelectedMethodCard = ({ item, onClick, placeholder }) => {
   const [imgError, setImgError] = useState(false);
   if (!item) {
     return (
-      <button onClick={onClick} data-testid="method-picker-btn" className="flex items-center justify-between w-full rounded-xl px-4 py-3 text-sm border border-gray-700/30 hover:border-gray-600/40 transition-colors" style={{ background: '#0c1120' }}>
+      <button onClick={onClick} data-testid="method-picker-btn" className="flex items-center justify-between w-full rounded-xl px-4 py-3 text-sm border border-gray-700/30 hover:border-gray-600/40 transition-colors" style={{ background: 'var(--card-inner)' }}>
         <span className="text-gray-500">{placeholder}</span>
         <ChevronDown className="w-4 h-4 text-gray-500" />
       </button>
@@ -452,7 +452,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
         <div className="mb-4">
           <label className="text-gray-400 text-sm mb-2 block">{activeTab === 'transfer' ? 'Transfer' : 'From'}</label>
-          <div className={`flex items-center gap-2 rounded-xl px-3 py-3 border overflow-hidden ${amountError ? 'border-red-500/40' : 'border-transparent'}`} style={{ background: '#0c1120' }}>
+          <div className={`flex items-center gap-2 rounded-xl px-3 py-3 border overflow-hidden ${amountError ? 'border-red-500/40' : 'border-transparent'}`} style={{ background: 'var(--card-inner)' }}>
             <CurrencyBtn currency={fromCurrency} type={fromType} onClick={() => setShowFromPicker(true)} />
             <input type="number" inputMode="decimal" placeholder="0" value={fromAmount} onChange={e => setFromAmount(e.target.value)}
               data-testid="from-amount-input"
@@ -500,7 +500,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
         <div className="mb-4">
           <label className="text-gray-400 text-sm mb-2 block">Receive</label>
-          <div className="flex items-center gap-2 rounded-xl px-3 py-3 overflow-hidden" style={{ background: '#0c1120' }}>
+          <div className="flex items-center gap-2 rounded-xl px-3 py-3 overflow-hidden" style={{ background: 'var(--card-inner)' }}>
             <CurrencyBtn currency={toCurrency} type={toType} onClick={() => setShowToPicker(true)} />
             <input type="text" placeholder="0" value={toAmount} readOnly
               data-testid="to-amount-input"
