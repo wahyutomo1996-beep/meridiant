@@ -321,6 +321,33 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
             <input type="number" placeholder="0" value={fromAmount} onChange={e => setFromAmount(e.target.value)}
               className="flex-1 bg-transparent text-white text-right text-base outline-none placeholder:text-gray-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           </div>
+          {activeTab === 'withdraw' && (() => {
+            const balKey = fromCurrency.displayCode || fromCurrency.code;
+            const bal = mockBalances[balKey] || 0;
+            return (
+              <div className="mt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-500 text-xs">Available: <span className="text-gray-300 font-medium">{bal} {balKey}</span></span>
+                </div>
+                <div className="flex gap-2">
+                  {[25, 50, 75, 100].map(pct => {
+                    const val = (bal * pct / 100);
+                    const isActive = fromAmount && Math.abs(parseFloat(fromAmount) - val) < 0.000001;
+                    return (
+                      <button key={pct} onClick={() => setFromAmount(String(val))}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${isActive
+                          ? 'bg-emerald-500 text-white'
+                          : 'text-emerald-400 hover:bg-emerald-500/15'
+                        }`}
+                        style={!isActive ? { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' } : {}}>
+                        {pct}%
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="mb-4">
