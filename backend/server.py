@@ -107,6 +107,14 @@ class BankAccountCreate(BaseModel):
     account_holder: str
     account_type: str = "bank"
 
+class ChatMessage(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+class TelegramConfig(BaseModel):
+    bot_token: str
+    chat_id: str
+
 # ============ HELPERS ============
 
 def hash_password(password: str) -> str:
