@@ -345,6 +345,7 @@ function AppContent() {
         </footer>
       </div>
 
+      <ChatbotWidget />
       <WalletConnectModal open={activeModal === "wallet"} onClose={() => setActiveModal(null)} onConnect={handleConnectWallet} />
       <SignInModal open={activeModal === "signin"} onClose={() => setActiveModal(null)} onSignIn={handleSignIn} onGoogleCredential={handleGoogleCredential} onSwitchToSignUp={() => setActiveModal("signup")} />
       <SignUpModal open={activeModal === "signup"} onClose={() => setActiveModal(null)} onSignUp={handleSignUp} onGoogleCredential={handleGoogleCredential} onSwitchToSignIn={() => setActiveModal("signin")} />
