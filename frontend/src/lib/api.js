@@ -32,7 +32,7 @@ api.interceptors.response.use(
 export const authAPI = {
   signup: (name, email, password) => api.post('/auth/signup', { name, email, password }),
   signin: (email, password) => api.post('/auth/signin', { email, password }),
-  googleSession: (session_id) => api.post('/auth/google-session', { session_id }),
+  googleAuth: (credential) => api.post('/auth/google', { credential }),
   getMe: () => api.get('/auth/me'),
 };
 
@@ -41,6 +41,7 @@ export const walletAPI = {
   connect: (wallet_id, wallet_name, wallet_address) =>
     api.post('/wallet/connect', { wallet_id, wallet_name, wallet_address }),
   disconnect: () => api.delete('/wallet/disconnect'),
+  balances: (address) => api.get(`/wallet/balances/${address}`),
 };
 
 // Transactions
