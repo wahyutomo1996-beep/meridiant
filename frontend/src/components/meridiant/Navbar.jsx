@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Wallet, LogOut, ChevronDown, ChevronRight,
-  CreditCard, History, UserCircle, Menu, X
+  CreditCard, History, UserCircle, Menu, X, LayoutDashboard
 } from 'lucide-react';
 import { Button } from '../ui/button';
 
