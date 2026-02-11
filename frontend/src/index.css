@@ -17,6 +17,41 @@ code {
         source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
+/* Meridiant theme variables */
+:root {
+    --bg-primary: #080d18;
+    --bg-card: rgba(21, 28, 44, 0.88);
+    --bg-card-border: rgba(52, 211, 153, 0.06);
+    --card-inner: #0c1120;
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --accent: #34d399;
+    --accent-bg: rgba(16, 185, 129, 0.08);
+    --nav-bg: transparent;
+    --footer-border: rgba(31, 41, 55, 0.3);
+    --modal-bg: #111827;
+    --dropdown-bg: #1a2235;
+    --input-bg: #0c1120;
+}
+
+[data-theme="light"] {
+    --bg-primary: #f0f4f8;
+    --bg-card: rgba(255, 255, 255, 0.92);
+    --bg-card-border: rgba(16, 185, 129, 0.12);
+    --card-inner: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --accent: #059669;
+    --accent-bg: rgba(16, 185, 129, 0.08);
+    --nav-bg: rgba(255, 255, 255, 0.7);
+    --footer-border: rgba(203, 213, 225, 0.5);
+    --modal-bg: #ffffff;
+    --dropdown-bg: #ffffff;
+    --input-bg: #f1f5f9;
+}
+
 @layer base {
     :root {
         --background: 0 0% 100%;
