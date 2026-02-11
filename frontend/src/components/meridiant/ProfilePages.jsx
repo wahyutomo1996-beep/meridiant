@@ -4,19 +4,19 @@ import { authAPI, walletAPI, transactionAPI } from '@/lib/api';
 import api from '@/lib/api';
 
 const PageShell = ({ title, onBack, children }) => (
-  <div className="w-full max-w-2xl mx-auto">
+  <div className="w-full max-w-2xl mx-auto px-1">
     <div className="mb-6 flex items-center gap-3">
-      <button onClick={onBack} className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-white/5 transition-colors">
+      <button onClick={onBack} className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-white/5 transition-colors btn-press" data-testid="page-back-btn">
         <ArrowLeft className="w-5 h-5 text-gray-400" />
       </button>
-      <h1 className="text-white text-xl font-semibold">{title}</h1>
+      <h1 className="text-white text-lg sm:text-xl font-semibold">{title}</h1>
     </div>
     {children}
   </div>
 );
 
 const Card = ({ children, className = '' }) => (
-  <div className={`rounded-2xl p-5 md:p-6 ${className}`} style={{ background: 'rgba(21, 28, 44, 0.88)', backdropFilter: 'blur(16px)', border: '1px solid rgba(52, 211, 153, 0.06)' }}>
+  <div className={`rounded-2xl p-4 sm:p-5 md:p-6 glass-card ${className}`}>
     {children}
   </div>
 );
