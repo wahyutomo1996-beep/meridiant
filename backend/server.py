@@ -1,15 +1,16 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import httpx
+import time
 from pathlib import Path
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel
 from typing import List, Optional
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 from jose import jwt, JWTError
 
@@ -28,7 +29,6 @@ ACCESS_TOKEN_EXPIRE_HOURS = 24
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-security = HTTPBearer(auto_error=False)
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -51,6 +51,8 @@ class UserResponse(BaseModel):
     wallet_connected: bool = False
     wallet_address: Optional[str] = None
     wallet_name: Optional[str] = None
+    picture: Optional[str] = None
+    auth_type: Optional[str] = "email"
 
 class AuthResponse(BaseModel):
     token: str
@@ -59,19 +61,17 @@ class AuthResponse(BaseModel):
 class WalletConnectRequest(BaseModel):
     wallet_id: str
     wallet_name: str
-
-class WalletResponse(BaseModel):
-    wallet_address: str
-    wallet_name: str
-    connected: bool
+    wallet_address: Optional[str] = None
 
 class TransactionCreate(BaseModel):
-    type: str  # transfer or withdraw
+    type: str
     from_currency: str
     from_amount: str
     to_currency: str
     to_amount: str
     method_or_dest: Optional[str] = None
+    tx_hash: Optional[str] = None
+    chain: Optional[str] = None
 
 class TransactionResponse(BaseModel):
     id: str
@@ -80,9 +80,24 @@ class TransactionResponse(BaseModel):
     from_amount: str
     to_currency: str
     to_amount: str
-    method_or_dest: Optional[str]
+    method_or_dest: Optional[str] = None
     status: str
+    tx_hash: Optional[str] = None
+    chain: Optional[str] = None
     created_at: str
+
+class GoogleSessionRequest(BaseModel):
+    session_id: str
+
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+
+class BankAccountCreate(BaseModel):
+    bank_name: str
+    account_number: str
+    account_holder: str
+    account_type: str = "bank"
 
 # ============ HELPERS ============
 
@@ -93,25 +108,97 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 def create_token(user_id: str) -> str:
-    expire = datetime.utcnow() + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
+    expire = datetime.now(timezone.utc) + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
     payload = {"sub": user_id, "exp": expire}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if not credentials:
+async def get_current_user(request: Request):
+    token = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+    if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
-        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
-
     user = await db.users.find_one({"_id": user_id})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return user
+
+# ============ COINGECKO PRICE CACHE ============
+
+price_cache = {"data": None, "timestamp": 0}
+CACHE_TTL = 30
+
+COINGECKO_MAP = {
+    "ethereum": "ETH",
+    "bitcoin": "BTC",
+    "tether": "USDT",
+    "usd-coin": "USDC",
+    "binancecoin": "BNB",
+    "solana": "SOL",
+    "matic-network": "MATIC",
+    "avalanche-2": "AVAX",
+    "arbitrum": "ARB",
+    "optimism": "OP",
+    "chainlink": "LINK",
+    "uniswap": "UNI",
+    "wrapped-bitcoin": "WBTC",
+}
+
+CHAIN_SUFFIXES = {
+    "ETH": [".Base", ".Arb", ".OP"],
+    "USDT": [".BSC", ".Arb", ".Base", ".Sol", ".Poly", ".OP", ".Avax"],
+    "USDC": [".Base", ".Arb", ".Sol", ".BSC", ".Poly", ".OP", ".Avax"],
+}
+
+@api_router.get("/prices")
+async def get_live_prices():
+    now = time.time()
+    if price_cache["data"] and (now - price_cache["timestamp"]) < CACHE_TTL:
+        return price_cache["data"]
+
+    try:
+        ids = ",".join(COINGECKO_MAP.keys())
+        async with httpx.AsyncClient() as http:
+            resp = await http.get(
+                f"https://api.coingecko.com/api/v3/simple/price?ids={ids}&vs_currencies=idr",
+                timeout=10
+            )
+            data = resp.json()
+
+        rates = {}
+        # IDRT pegged to IDR
+        for suffix in ["", ".BSC", ".Poly"]:
+            rates[f"IDR_IDRT{suffix}"] = 1
+            rates[f"IDRT{suffix}_IDR"] = 1
+
+        for cg_id, symbol in COINGECKO_MAP.items():
+            if cg_id in data and "idr" in data[cg_id]:
+                idr_price = data[cg_id]["idr"]
+                rates[f"{symbol}_IDR"] = idr_price
+                rates[f"IDR_{symbol}"] = 1 / idr_price if idr_price else 0
+                # Chain variants
+                for suffix in CHAIN_SUFFIXES.get(symbol, []):
+                    rates[f"{symbol}{suffix}_IDR"] = idr_price
+                    rates[f"IDR_{symbol}{suffix}"] = 1 / idr_price if idr_price else 0
+
+        result = {"rates": rates, "timestamp": now, "source": "coingecko"}
+        price_cache["data"] = result
+        price_cache["timestamp"] = now
+        return result
+
+    except Exception as e:
+        logger.error(f"CoinGecko error: {e}")
+        if price_cache["data"]:
+            return price_cache["data"]
+        return {"rates": {}, "timestamp": now, "source": "error"}
 
 # ============ AUTH ROUTES ============
 
@@ -120,7 +207,6 @@ async def signup(data: UserSignUp):
     existing = await db.users.find_one({"email": data.email.lower()})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-
     user_id = str(uuid.uuid4())
     user_doc = {
         "_id": user_id,
@@ -130,17 +216,14 @@ async def signup(data: UserSignUp):
         "wallet_connected": False,
         "wallet_address": None,
         "wallet_name": None,
-        "created_at": datetime.utcnow().isoformat(),
+        "auth_type": "email",
+        "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.users.insert_one(user_doc)
     token = create_token(user_id)
-
     return AuthResponse(
         token=token,
-        user=UserResponse(
-            id=user_id, name=data.name, email=data.email.lower(),
-            wallet_connected=False
-        )
+        user=UserResponse(id=user_id, name=data.name, email=data.email.lower())
     )
 
 @api_router.post("/auth/signin", response_model=AuthResponse)
@@ -148,7 +231,6 @@ async def signin(data: UserSignIn):
     user = await db.users.find_one({"email": data.email.lower()})
     if not user or not verify_password(data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-
     token = create_token(user["_id"])
     return AuthResponse(
         token=token,
@@ -157,26 +239,87 @@ async def signin(data: UserSignIn):
             wallet_connected=user.get("wallet_connected", False),
             wallet_address=user.get("wallet_address"),
             wallet_name=user.get("wallet_name"),
+            auth_type=user.get("auth_type", "email"),
+            picture=user.get("picture"),
         )
     )
 
-@api_router.get("/auth/me", response_model=UserResponse)
+@api_router.post("/auth/google-session")
+async def google_session(data: GoogleSessionRequest):
+    """Process Emergent Auth session_id and return JWT token"""
+    async with httpx.AsyncClient() as http:
+        resp = await http.get(
+            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+            headers={"X-Session-ID": data.session_id},
+            timeout=10
+        )
+    if resp.status_code != 200:
+        raise HTTPException(status_code=401, detail="Invalid Google session")
+
+    session_data = resp.json()
+    email = session_data["email"].lower()
+    name = session_data.get("name", email.split("@")[0])
+    picture = session_data.get("picture", "")
+
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        user_id = existing["_id"]
+        await db.users.update_one(
+            {"_id": user_id},
+            {"$set": {"name": name, "picture": picture}}
+        )
+        wallet_connected = existing.get("wallet_connected", False)
+        wallet_address = existing.get("wallet_address")
+        wallet_name = existing.get("wallet_name")
+    else:
+        user_id = str(uuid.uuid4())
+        await db.users.insert_one({
+            "_id": user_id,
+            "name": name,
+            "email": email,
+            "password_hash": "",
+            "wallet_connected": False,
+            "wallet_address": None,
+            "wallet_name": None,
+            "auth_type": "google",
+            "picture": picture,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        wallet_connected = False
+        wallet_address = None
+        wallet_name = None
+
+    token = create_token(user_id)
+    return {
+        "token": token,
+        "user": {
+            "id": user_id,
+            "name": name,
+            "email": email,
+            "wallet_connected": wallet_connected,
+            "wallet_address": wallet_address,
+            "wallet_name": wallet_name,
+            "auth_type": "google",
+            "picture": picture,
+        }
+    }
+
+@api_router.get("/auth/me")
 async def get_me(user=Depends(get_current_user)):
-    return UserResponse(
-        id=user["_id"], name=user["name"], email=user["email"],
-        wallet_connected=user.get("wallet_connected", False),
-        wallet_address=user.get("wallet_address"),
-        wallet_name=user.get("wallet_name"),
-    )
+    return {
+        "id": user["_id"], "name": user["name"], "email": user["email"],
+        "wallet_connected": user.get("wallet_connected", False),
+        "wallet_address": user.get("wallet_address"),
+        "wallet_name": user.get("wallet_name"),
+        "auth_type": user.get("auth_type", "email"),
+        "picture": user.get("picture"),
+    }
 
 # ============ WALLET ROUTES ============
 
-@api_router.post("/wallet/connect", response_model=WalletResponse)
+@api_router.post("/wallet/connect")
 async def connect_wallet(data: WalletConnectRequest, user=Depends(get_current_user)):
-    # Generate mock wallet address
-    import random
-    addr = "0x" + "".join(random.choices("0123456789abcdef", k=40))
-
+    addr = data.wallet_address or "0x" + uuid.uuid4().hex[:40]
     await db.users.update_one(
         {"_id": user["_id"]},
         {"$set": {
@@ -185,28 +328,21 @@ async def connect_wallet(data: WalletConnectRequest, user=Depends(get_current_us
             "wallet_name": data.wallet_name,
         }}
     )
-    return WalletResponse(wallet_address=addr, wallet_name=data.wallet_name, connected=True)
+    return {"wallet_address": addr, "wallet_name": data.wallet_name, "connected": True}
 
 @api_router.delete("/wallet/disconnect")
 async def disconnect_wallet(user=Depends(get_current_user)):
     await db.users.update_one(
         {"_id": user["_id"]},
-        {"$set": {
-            "wallet_connected": False,
-            "wallet_address": None,
-            "wallet_name": None,
-        }}
+        {"$set": {"wallet_connected": False, "wallet_address": None, "wallet_name": None}}
     )
     return {"disconnected": True}
 
 # ============ TRANSACTION ROUTES ============
 
-@api_router.post("/transactions", response_model=TransactionResponse)
+@api_router.post("/transactions")
 async def create_transaction(data: TransactionCreate, user=Depends(get_current_user)):
-    if not user.get("wallet_connected"):
-        raise HTTPException(status_code=400, detail="Wallet not connected")
-
-    tx_id = "MRD-" + str(uuid.uuid4())[:8].upper()
+    tx_id = "MRD-" + uuid.uuid4().hex[:8].upper()
     tx_doc = {
         "_id": tx_id,
         "user_id": user["_id"],
@@ -216,61 +352,87 @@ async def create_transaction(data: TransactionCreate, user=Depends(get_current_u
         "to_currency": data.to_currency,
         "to_amount": data.to_amount,
         "method_or_dest": data.method_or_dest,
-        "status": "completed",
-        "created_at": datetime.utcnow().isoformat(),
+        "tx_hash": data.tx_hash,
+        "chain": data.chain,
+        "status": "completed" if data.tx_hash else "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.transactions.insert_one(tx_doc)
+    return {
+        "id": tx_id, "type": data.type,
+        "from_currency": data.from_currency, "from_amount": data.from_amount,
+        "to_currency": data.to_currency, "to_amount": data.to_amount,
+        "method_or_dest": data.method_or_dest, "status": tx_doc["status"],
+        "tx_hash": data.tx_hash, "chain": data.chain,
+        "created_at": tx_doc["created_at"]
+    }
 
-    return TransactionResponse(
-        id=tx_id, type=data.type,
-        from_currency=data.from_currency, from_amount=data.from_amount,
-        to_currency=data.to_currency, to_amount=data.to_amount,
-        method_or_dest=data.method_or_dest, status="completed",
-        created_at=tx_doc["created_at"]
-    )
-
-@api_router.get("/transactions", response_model=List[TransactionResponse])
+@api_router.get("/transactions")
 async def get_transactions(user=Depends(get_current_user)):
     txs = await db.transactions.find({"user_id": user["_id"]}).sort("created_at", -1).to_list(100)
     return [
-        TransactionResponse(
-            id=t["_id"], type=t["type"],
-            from_currency=t["from_currency"], from_amount=t["from_amount"],
-            to_currency=t["to_currency"], to_amount=t["to_amount"],
-            method_or_dest=t.get("method_or_dest"), status=t["status"],
-            created_at=t["created_at"]
-        ) for t in txs
+        {
+            "id": t["_id"], "type": t["type"],
+            "from_currency": t["from_currency"], "from_amount": t["from_amount"],
+            "to_currency": t["to_currency"], "to_amount": t["to_amount"],
+            "method_or_dest": t.get("method_or_dest"), "status": t["status"],
+            "tx_hash": t.get("tx_hash"), "chain": t.get("chain"),
+            "created_at": t["created_at"]
+        } for t in txs
     ]
 
-# ============ EXCHANGE RATES ============
+# ============ PROFILE ROUTES ============
 
-@api_router.get("/exchange-rates")
-async def get_exchange_rates():
+@api_router.put("/profile")
+async def update_profile(data: ProfileUpdate, user=Depends(get_current_user)):
+    updates = {}
+    if data.name: updates["name"] = data.name
+    if data.phone is not None: updates["phone"] = data.phone
+    if updates:
+        await db.users.update_one({"_id": user["_id"]}, {"$set": updates})
+    updated = await db.users.find_one({"_id": user["_id"]})
     return {
-        "rates": {
-            "IDR_IDRT": 1,
-            "IDR_ETH": 0.0000000384,
-            "IDR_BTC": 0.0000000023,
-            "IDR_USDT": 0.0000609,
-            "IDR_USDC": 0.0000609,
-            "IDR_BNB": 0.00000155,
-            "IDR_MATIC": 0.00155,
-            "IDR_SOL": 0.0000043,
-            "IDRT_IDR": 1,
-            "ETH_IDR": 26000000,
-            "BTC_IDR": 435000000,
-            "USDT_IDR": 16400,
-            "USDC_IDR": 16400,
-            "BNB_IDR": 645000,
-            "SOL_IDR": 232000,
-            "MATIC_IDR": 645,
-        }
+        "id": updated["_id"], "name": updated["name"], "email": updated["email"],
+        "phone": updated.get("phone", ""),
+        "wallet_connected": updated.get("wallet_connected", False),
+        "wallet_address": updated.get("wallet_address"),
+        "wallet_name": updated.get("wallet_name"),
+        "created_at": updated.get("created_at", ""),
     }
 
+# ============ BANK ACCOUNT ROUTES ============
+
+@api_router.post("/bank-accounts")
+async def add_bank_account(data: BankAccountCreate, user=Depends(get_current_user)):
+    account = {
+        "id": str(uuid.uuid4())[:8],
+        "bank_name": data.bank_name,
+        "account_number": data.account_number,
+        "account_holder": data.account_holder,
+        "account_type": data.account_type,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.update_one({"_id": user["_id"]}, {"$push": {"bank_accounts": account}})
+    return account
+
+@api_router.get("/bank-accounts")
+async def get_bank_accounts(user=Depends(get_current_user)):
+    u = await db.users.find_one({"_id": user["_id"]})
+    return {"accounts": u.get("bank_accounts", [])}
+
+@api_router.delete("/bank-accounts/{account_id}")
+async def delete_bank_account(account_id: str, user=Depends(get_current_user)):
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$pull": {"bank_accounts": {"id": account_id}}}
+    )
+    return {"deleted": True}
+
 # ============ HEALTH ============
+
 @api_router.get("/")
 async def root():
-    return {"message": "Meridiant API v1.0.0"}
+    return {"message": "Meridiant API v2.0.0"}
 
 # Include router
 app.include_router(api_router)
@@ -299,68 +461,10 @@ async def seed_test_user():
             "wallet_connected": False,
             "wallet_address": None,
             "wallet_name": None,
-            "phone": "",
-            "bank_accounts": [],
-            "created_at": datetime.utcnow().isoformat(),
+            "auth_type": "email",
+            "created_at": datetime.now(timezone.utc).isoformat(),
         })
         logger.info("Seeded test user: test@meridiant.com / Test1234!")
-
-# ============ PROFILE ROUTES ============
-
-class ProfileUpdate(BaseModel):
-    name: Optional[str] = None
-    phone: Optional[str] = None
-
-@api_router.put("/profile")
-async def update_profile(data: ProfileUpdate, user=Depends(get_current_user)):
-    updates = {}
-    if data.name: updates["name"] = data.name
-    if data.phone is not None: updates["phone"] = data.phone
-    if updates:
-        await db.users.update_one({"_id": user["_id"]}, {"$set": updates})
-    updated = await db.users.find_one({"_id": user["_id"]})
-    return {
-        "id": updated["_id"], "name": updated["name"], "email": updated["email"],
-        "phone": updated.get("phone", ""),
-        "wallet_connected": updated.get("wallet_connected", False),
-        "wallet_address": updated.get("wallet_address"),
-        "wallet_name": updated.get("wallet_name"),
-        "created_at": updated.get("created_at", ""),
-    }
-
-# ============ BANK ACCOUNT ROUTES ============
-
-class BankAccountCreate(BaseModel):
-    bank_name: str
-    account_number: str
-    account_holder: str
-    account_type: str = "bank"  # bank, ewallet, qris
-
-@api_router.post("/bank-accounts")
-async def add_bank_account(data: BankAccountCreate, user=Depends(get_current_user)):
-    account = {
-        "id": str(uuid.uuid4())[:8],
-        "bank_name": data.bank_name,
-        "account_number": data.account_number,
-        "account_holder": data.account_holder,
-        "account_type": data.account_type,
-        "created_at": datetime.utcnow().isoformat(),
-    }
-    await db.users.update_one({"_id": user["_id"]}, {"$push": {"bank_accounts": account}})
-    return account
-
-@api_router.get("/bank-accounts")
-async def get_bank_accounts(user=Depends(get_current_user)):
-    u = await db.users.find_one({"_id": user["_id"]})
-    return {"accounts": u.get("bank_accounts", [])}
-
-@api_router.delete("/bank-accounts/{account_id}")
-async def delete_bank_account(account_id: str, user=Depends(get_current_user)):
-    await db.users.update_one(
-        {"_id": user["_id"]},
-        {"$pull": {"bank_accounts": {"id": account_id}}}
-    )
-    return {"deleted": True}
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
