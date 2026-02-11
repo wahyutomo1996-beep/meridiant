@@ -506,7 +506,8 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
             <CurrencyBtn currency={toCurrency} type={toType} onClick={() => setShowToPicker(true)} />
             <input type="text" placeholder="0" value={toAmount} readOnly
               data-testid="to-amount-input"
-              className="w-0 flex-1 min-w-0 bg-transparent text-white text-right text-sm sm:text-base outline-none placeholder:text-gray-600" />
+              className="w-0 flex-1 min-w-0 bg-transparent text-right text-sm sm:text-base outline-none"
+              style={{ color: 'var(--text-primary)' }} />
           </div>
         </div>
 
