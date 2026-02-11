@@ -782,6 +782,23 @@ async def seed_test_user():
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
         logger.info("Seeded test user: test@meridiant.com / Test1234!")
+    # Seed admin user
+    admin = await db.users.find_one({"email": ADMIN_EMAIL})
+    if not admin:
+        admin_id = str(uuid.uuid4())
+        await db.users.insert_one({
+            "_id": admin_id,
+            "name": "Admin Meridiant",
+            "email": ADMIN_EMAIL,
+            "password_hash": hash_password("Admin1234!"),
+            "wallet_connected": False,
+            "wallet_address": None,
+            "wallet_name": None,
+            "auth_type": "email",
+            "is_admin": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        logger.info(f"Seeded admin user: {ADMIN_EMAIL} / Admin1234!")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
