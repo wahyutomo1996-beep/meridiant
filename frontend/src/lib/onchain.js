@@ -173,7 +173,7 @@ export async function sendSolanaTransfer(tokenCode, amount, toAddress) {
   // Dynamic import for Solana
   const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = await import('@solana/web3.js');
 
-  const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+  const connection = new Connection(`https://solana-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, 'confirmed');
   const phantom = window.phantom.solana;
 
   // Connect if not connected
