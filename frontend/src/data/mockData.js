@@ -113,6 +113,10 @@ export const cryptoCurrencies = [
     logo: 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png' },
   { code: 'UNI', name: 'Uniswap', color: '#FF007A', chain: 'Ethereum',
     logo: 'https://assets.coingecko.com/coins/images/12504/small/uniswap-logo.png' },
+  { code: 'TON', name: 'Toncoin', color: '#0098EA', chain: 'TON',
+    logo: 'https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png' },
+  { code: 'USDT', name: 'Tether (TON)', color: '#26A17B', chain: 'TON', displayCode: 'USDT.TON',
+    logo: 'https://assets.coingecko.com/coins/images/325/small/Tether.png' },
 ];
 
 // Chain logos
