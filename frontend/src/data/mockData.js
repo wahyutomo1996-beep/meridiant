@@ -8,8 +8,8 @@ export const fiatCurrencies = [
 
 // Crypto currencies with real logos from CoinGecko CDN
 export const cryptoCurrencies = [
-  { code: 'IDRT', name: 'Rupiah Token', color: '#2ECC71', chain: 'Ethereum',
-    logo: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5765.png' },
+  { code: 'IDRT', name: 'Rupiah Token', color: '#C0392B', chain: 'Ethereum',
+    logo: 'https://customer-assets.emergentagent.com/job_chain-connect-6/artifacts/6inghw1d_rupiahtoken.png' },
   { code: 'ETH', name: 'Ethereum', color: '#627EEA', chain: 'Ethereum',
     logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png' },
   { code: 'ETH', name: 'Ethereum (Base)', color: '#0052FF', chain: 'Base', displayCode: 'ETH.Base',
