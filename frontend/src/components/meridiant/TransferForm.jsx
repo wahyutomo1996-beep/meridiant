@@ -232,39 +232,114 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
   );
 };
 
-// ========== GROUPED PICKER ==========
-const GroupedPicker = ({ groups, selected, onSelect, placeholder }) => {
-  const [open, setOpen] = useState(false);
+// ========== CARD-STYLE METHOD/DESTINATION PICKER ==========
+const MethodPickerModal = ({ open, onClose, groups, selected, onSelect, title }) => {
+  const [imgErrors, setImgErrors] = useState({});
+
+  const MethodLogo = ({ item }) => {
+    if (item.logo && !imgErrors[item.id]) {
+      return <img src={item.logo} alt={item.name} className="w-9 h-9 rounded-xl object-cover"
+        onError={() => setImgErrors(prev => ({ ...prev, [item.id]: true }))} />;
+    }
+    const CatIcon = categoryIcons[groups.find(g => g.items.some(i => i.id === item.id))?.category] || Building2;
+    return (
+      <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: (item.color || '#555') + '20' }}>
+        <CatIcon className="w-4 h-4" style={{ color: item.color || '#888' }} />
+      </div>
+    );
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button className="flex items-center justify-between w-full rounded-xl px-4 py-3 text-sm" style={{ background: '#0c1120' }}>
-          <span className={selected ? 'text-white' : 'text-gray-500'}>{selected ? selected.name : placeholder}</span>
-          <ChevronDown className="w-4 h-4 text-gray-500" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 border-gray-700/50 max-h-[320px] overflow-y-auto custom-scrollbar" style={{ background: '#1a2235' }}>
-        {groups.map((group, gi) => {
-          const CatIcon = categoryIcons[group.category] || Building2;
-          return (
-            <div key={group.category}>
-              {gi > 0 && <div className="border-t border-gray-700/30 mx-3" />}
-              <div className="flex items-center gap-2 px-4 py-2.5 sticky top-0" style={{ background: '#1a2235' }}>
-                <CatIcon className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-emerald-400 text-xs font-semibold uppercase tracking-wider">{group.category}</span>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 gap-0 max-h-[85vh] sm:max-h-[85vh] h-[100dvh] sm:h-auto flex flex-col [&>button]:hidden sm:rounded-2xl rounded-none" style={{ background: '#111827' }}>
+        <div className="flex items-center justify-between p-5 pb-3 flex-shrink-0">
+          <DialogTitle className="text-white text-lg font-semibold">{title}</DialogTitle>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
+            <X className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-5 custom-scrollbar">
+          {groups.map((group) => {
+            const CatIcon = categoryIcons[group.category] || Building2;
+            return (
+              <div key={group.category}>
+                <div className="flex items-center gap-2 mb-2.5 px-1">
+                  <CatIcon className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-emerald-400 text-xs font-semibold uppercase tracking-wider">{group.category}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {group.items.map(item => (
+                    <button
+                      key={item.id}
+                      onClick={() => { onSelect(item); onClose(); }}
+                      data-testid={`method-${item.id}`}
+                      className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all text-left ${
+                        selected?.id === item.id
+                          ? 'bg-emerald-500/10 border border-emerald-500/30 ring-1 ring-emerald-500/20'
+                          : 'border border-gray-700/30 hover:border-gray-600/50 hover:bg-white/[0.02]'
+                      }`}
+                      style={{ background: selected?.id === item.id ? undefined : 'rgba(12,17,32,0.6)' }}
+                    >
+                      <MethodLogo item={item} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium">{item.name}</p>
+                        {item.desc && <p className="text-gray-500 text-xs truncate">{item.desc}</p>}
+                      </div>
+                      <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                        {item.fee !== undefined && (
+                          <span className={`text-[11px] ${item.fee === 0 ? 'text-emerald-400' : 'text-gray-400'}`}>
+                            {item.fee === 0 ? 'Gratis' : `Rp ${item.fee.toLocaleString()}`}
+                          </span>
+                        )}
+                        {item.eta && (
+                          <span className="text-gray-500 text-[10px] flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5" />{item.eta}
+                          </span>
+                        )}
+                      </div>
+                      {selected?.id === item.id && <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
+                    </button>
+                  ))}
+                </div>
               </div>
-              {group.items.map(item => (
-                <button key={item.id} onClick={() => { onSelect(item); setOpen(false); }}
-                  className={`flex flex-col w-full px-4 py-2.5 pl-10 hover:bg-white/5 transition-colors text-left ${selected?.id === item.id ? 'bg-emerald-500/10' : ''}`}>
-                  <span className="text-white text-sm">{item.name}</span>
-                  {item.desc && <span className="text-gray-500 text-xs">{item.desc}</span>}
-                </button>
-              ))}
-            </div>
-          );
-        })}
-      </PopoverContent>
-    </Popover>
+            );
+          })}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Selected method display card
+const SelectedMethodCard = ({ item, onClick, placeholder }) => {
+  const [imgError, setImgError] = useState(false);
+  if (!item) {
+    return (
+      <button onClick={onClick} data-testid="method-picker-btn" className="flex items-center justify-between w-full rounded-xl px-4 py-3 text-sm border border-gray-700/30 hover:border-gray-600/40 transition-colors" style={{ background: '#0c1120' }}>
+        <span className="text-gray-500">{placeholder}</span>
+        <ChevronDown className="w-4 h-4 text-gray-500" />
+      </button>
+    );
+  }
+  return (
+    <button onClick={onClick} data-testid="method-picker-btn" className="flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm border border-emerald-500/20 hover:border-emerald-500/30 transition-colors" style={{ background: 'rgba(16,185,129,0.04)' }}>
+      {item.logo && !imgError ? (
+        <img src={item.logo} alt={item.name} className="w-8 h-8 rounded-lg object-cover" onError={() => setImgError(true)} />
+      ) : (
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: (item.color || '#555') + '20' }}>
+          <span className="text-xs font-bold" style={{ color: item.color }}>{item.name[0]}</span>
+        </div>
+      )}
+      <div className="flex-1 text-left">
+        <p className="text-white text-sm font-medium">{item.name}</p>
+        <div className="flex items-center gap-2 text-[11px]">
+          <span className={item.fee === 0 ? 'text-emerald-400' : 'text-gray-400'}>{item.fee === 0 ? 'Gratis' : `Rp ${item.fee?.toLocaleString()}`}</span>
+          {item.eta && <span className="text-gray-500">{item.eta}</span>}
+        </div>
+      </div>
+      <ChevronDown className="w-4 h-4 text-gray-400" />
+    </button>
   );
 };
 
