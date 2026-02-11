@@ -47,6 +47,12 @@ export const fiatCurrencies = [
 export const cryptoCurrencies = [
   { code: 'IDRT', name: 'Rupiah Token', color: '#C0392B', chain: 'Ethereum',
     logo: 'https://customer-assets.emergentagent.com/job_chain-connect-6/artifacts/6inghw1d_rupiahtoken.png' },
+  { code: 'IDRT', name: 'Rupiah Token (BSC)', color: '#C0392B', chain: 'BSC', displayCode: 'IDRT.BSC',
+    logo: 'https://customer-assets.emergentagent.com/job_chain-connect-6/artifacts/6inghw1d_rupiahtoken.png',
+    contract: '0x66207e39bb77e6b99aab56795c7c340c08520d83' },
+  { code: 'IDRT', name: 'Rupiah Token (Polygon)', color: '#C0392B', chain: 'Polygon', displayCode: 'IDRT.Poly',
+    logo: 'https://customer-assets.emergentagent.com/job_chain-connect-6/artifacts/6inghw1d_rupiahtoken.png',
+    contract: '0x554cd6bdD03214b10AafA3e0D4D42De0C5D2937b' },
   { code: 'ETH', name: 'Ethereum', color: '#627EEA', chain: 'Ethereum',
     logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png' },
   { code: 'ETH', name: 'Ethereum (Base)', color: '#0052FF', chain: 'Base', displayCode: 'ETH.Base',
