@@ -359,5 +359,125 @@ class TestAuthMe:
         print("✓ Auth me correctly requires token")
 
 
+class TestProfile:
+    """Profile update endpoint tests"""
+    
+    @pytest.fixture
+    def auth_token(self):
+        """Get authentication token"""
+        response = requests.post(f"{BASE_URL}/api/auth/signin", json={
+            "email": "test@meridiant.com",
+            "password": "Test1234!"
+        })
+        if response.status_code != 200:
+            pytest.skip("Could not authenticate")
+        return response.json()["token"]
+    
+    def test_update_profile(self, auth_token):
+        """Test /api/profile update works"""
+        response = requests.put(
+            f"{BASE_URL}/api/profile",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"name": "Updated Tester", "phone": "+62812345678"}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Updated Tester"
+        assert data["phone"] == "+62812345678"
+        print(f"✓ Profile updated: {data['name']}, phone: {data['phone']}")
+        
+        # Restore original name
+        requests.put(
+            f"{BASE_URL}/api/profile",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"name": "Meridiant Tester"}
+        )
+    
+    def test_update_profile_requires_auth(self):
+        """Test /api/profile requires authentication"""
+        response = requests.put(f"{BASE_URL}/api/profile", json={"name": "Test"})
+        assert response.status_code == 401
+        print("✓ Profile update correctly requires auth")
+
+
+class TestBankAccounts:
+    """Bank account CRUD endpoint tests"""
+    
+    @pytest.fixture
+    def auth_token(self):
+        """Get authentication token"""
+        response = requests.post(f"{BASE_URL}/api/auth/signin", json={
+            "email": "test@meridiant.com",
+            "password": "Test1234!"
+        })
+        if response.status_code != 200:
+            pytest.skip("Could not authenticate")
+        return response.json()["token"]
+    
+    def test_add_bank_account(self, auth_token):
+        """Test adding a bank account"""
+        response = requests.post(
+            f"{BASE_URL}/api/bank-accounts",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={
+                "bank_name": "BCA",
+                "account_number": "1234567890",
+                "account_holder": "Test User",
+                "account_type": "bank"
+            }
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["bank_name"] == "BCA"
+        assert data["account_number"] == "1234567890"
+        assert "id" in data
+        print(f"✓ Bank account added: {data['bank_name']} - {data['account_number']}")
+        return data["id"]
+    
+    def test_get_bank_accounts(self, auth_token):
+        """Test listing bank accounts"""
+        response = requests.get(
+            f"{BASE_URL}/api/bank-accounts",
+            headers={"Authorization": f"Bearer {auth_token}"}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "accounts" in data
+        assert isinstance(data["accounts"], list)
+        print(f"✓ Listed {len(data['accounts'])} bank accounts")
+    
+    def test_delete_bank_account(self, auth_token):
+        """Test deleting a bank account"""
+        # First add an account
+        add_resp = requests.post(
+            f"{BASE_URL}/api/bank-accounts",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={
+                "bank_name": "BNI",
+                "account_number": "9876543210",
+                "account_holder": "Delete Test",
+                "account_type": "bank"
+            }
+        )
+        assert add_resp.status_code == 200
+        account_id = add_resp.json()["id"]
+        
+        # Then delete it
+        response = requests.delete(
+            f"{BASE_URL}/api/bank-accounts/{account_id}",
+            headers={"Authorization": f"Bearer {auth_token}"}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["deleted"] == True
+        print(f"✓ Bank account deleted: {account_id}")
+    
+    def test_bank_accounts_require_auth(self):
+        """Test bank account endpoints require authentication"""
+        response = requests.get(f"{BASE_URL}/api/bank-accounts")
+        assert response.status_code == 401
+        print("✓ Bank accounts correctly requires auth")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
