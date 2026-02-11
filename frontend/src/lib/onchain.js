@@ -23,26 +23,30 @@ const TOKEN_CONTRACTS = {
   },
 };
 
-// Chain RPC configs
+// Chain RPC configs (Alchemy)
+const ALCHEMY_KEY = 'c37Ej1w5Cm_C2YY158blZ';
+
 const CHAIN_CONFIG = {
   'BSC': {
     chainId: '0x38',
     chainName: 'BNB Smart Chain',
-    rpcUrls: ['https://bsc-dataseed.binance.org/'],
+    rpcUrls: [`https://bnb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`],
+    fallbackRpc: 'https://bsc-dataseed.binance.org/',
     nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
     blockExplorerUrls: ['https://bscscan.com'],
   },
   'Polygon': {
     chainId: '0x89',
     chainName: 'Polygon',
-    rpcUrls: ['https://polygon-rpc.com/'],
+    rpcUrls: [`https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`],
+    fallbackRpc: 'https://polygon-rpc.com/',
     nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
     blockExplorerUrls: ['https://polygonscan.com'],
   },
 };
 
-// Platform deposit address (for receiving transfers)
-const PLATFORM_ADDRESS = '0x000000000000000000000000000000000000dEaD';
+// Platform deposit address
+const PLATFORM_ADDRESS = '0xdf32c54583b4d83939b93aa2ca23487d4eb853da';
 
 // Switch MetaMask to the correct chain
 async function switchChain(provider, chainId) {
