@@ -14,7 +14,7 @@ const Background = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden" style={{ background: '#080d18', zIndex: -1 }}>
+    <div className="fixed inset-0 overflow-hidden" style={{ background: 'var(--bg-primary)', zIndex: -1 }}>
       {stars.map(star => (
         <div
           key={star.id}
