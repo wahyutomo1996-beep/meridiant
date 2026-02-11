@@ -11,7 +11,7 @@ import sys
 from typing import Dict, Any
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://on-chain-fiat.preview.emergentagent.com/api"
+BACKEND_URL = "https://token-swap-go.preview.emergentagent.com/api"
 
 class MeridiantAPITester:
     def __init__(self):
