@@ -269,22 +269,24 @@ async def signin(data: UserSignIn):
         )
     )
 
-@api_router.post("/auth/google-session")
-async def google_session(data: GoogleSessionRequest):
-    """Process Emergent Auth session_id and return JWT token"""
+@api_router.post("/auth/google")
+async def google_auth(data: GoogleAuthRequest):
+    """Verify Google ID token and return JWT"""
     async with httpx.AsyncClient() as http:
         resp = await http.get(
-            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-            headers={"X-Session-ID": data.session_id},
+            f"https://oauth2.googleapis.com/tokeninfo?id_token={data.credential}",
             timeout=10
         )
     if resp.status_code != 200:
-        raise HTTPException(status_code=401, detail="Invalid Google session")
+        raise HTTPException(status_code=401, detail="Invalid Google token")
 
-    session_data = resp.json()
-    email = session_data["email"].lower()
-    name = session_data.get("name", email.split("@")[0])
-    picture = session_data.get("picture", "")
+    info = resp.json()
+    if info.get("aud") != GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=401, detail="Invalid client ID")
+
+    email = info["email"].lower()
+    name = info.get("name", email.split("@")[0])
+    picture = info.get("picture", "")
 
     existing = await db.users.find_one({"email": email})
     if existing:
@@ -328,6 +330,76 @@ async def google_session(data: GoogleSessionRequest):
             "picture": picture,
         }
     }
+
+# Real wallet balance endpoint
+@api_router.get("/wallet/balances/{address}")
+async def get_wallet_balances(address: str):
+    """Fetch real token balances from blockchain"""
+    balances = {}
+    alchemy_key = ALCHEMY_API_KEY
+
+    async with httpx.AsyncClient(timeout=10) as http:
+        # BSC native (BNB)
+        try:
+            resp = await http.post(
+                f"https://bnb-mainnet.g.alchemy.com/v2/{alchemy_key}",
+                json={"jsonrpc": "2.0", "method": "eth_getBalance", "params": [address, "latest"], "id": 1}
+            )
+            result = resp.json().get("result", "0x0")
+            balances["BNB"] = str(int(result, 16) / 1e18)
+        except Exception as e:
+            logger.warning(f"BNB balance error: {e}")
+
+        # ERC-20 balances on BSC
+        erc20_tokens = {
+            "IDRT.BSC": "0x66207e39bb77e6b99aab56795c7c340c08520d83",
+            "USDT.BSC": "0x55d398326f99059fF775485246999027B3197955",
+            "USDC.BSC": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+        }
+        balance_of_sig = "0x70a08231000000000000000000000000"
+        padded_addr = address[2:].lower().zfill(64)
+
+        for token_key, contract in erc20_tokens.items():
+            try:
+                resp = await http.post(
+                    f"https://bnb-mainnet.g.alchemy.com/v2/{alchemy_key}",
+                    json={
+                        "jsonrpc": "2.0", "method": "eth_call",
+                        "params": [{"to": contract, "data": balance_of_sig + padded_addr}, "latest"],
+                        "id": 1
+                    }
+                )
+                result = resp.json().get("result", "0x0")
+                raw = int(result, 16)
+                decimals = 2 if "IDRT" in token_key else 18
+                balances[token_key] = str(raw / (10 ** decimals))
+            except Exception as e:
+                logger.warning(f"{token_key} balance error: {e}")
+
+        # Polygon balances
+        poly_tokens = {
+            "IDRT.Poly": "0x554cd6bdD03214b10AafA3e0D4D42De0C5D2937b",
+            "USDT.Poly": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+            "USDC.Poly": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+        }
+        for token_key, contract in poly_tokens.items():
+            try:
+                resp = await http.post(
+                    f"https://polygon-mainnet.g.alchemy.com/v2/{alchemy_key}",
+                    json={
+                        "jsonrpc": "2.0", "method": "eth_call",
+                        "params": [{"to": contract, "data": balance_of_sig + padded_addr}, "latest"],
+                        "id": 1
+                    }
+                )
+                result = resp.json().get("result", "0x0")
+                raw = int(result, 16)
+                decimals = 2 if "IDRT" in token_key else 6
+                balances[token_key] = str(raw / (10 ** decimals))
+            except Exception as e:
+                logger.warning(f"{token_key} balance error: {e}")
+
+    return {"address": address, "balances": balances}
 
 @api_router.get("/auth/me")
 async def get_me(user=Depends(get_current_user)):
