@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Star twinkle animation */
 .star-twinkle {
@@ -8,6 +8,87 @@
 @keyframes twinkle {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 1; }
+}
+
+/* Entrance animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(52, 211, 153, 0.15); }
+  50% { box-shadow: 0 0 40px rgba(52, 211, 153, 0.25); }
+}
+
+.anim-fade-up { animation: fadeUp 0.6s ease-out both; }
+.anim-fade-up-d1 { animation: fadeUp 0.6s ease-out 0.1s both; }
+.anim-fade-up-d2 { animation: fadeUp 0.6s ease-out 0.2s both; }
+.anim-fade-up-d3 { animation: fadeUp 0.6s ease-out 0.3s both; }
+.anim-fade-up-d4 { animation: fadeUp 0.6s ease-out 0.4s both; }
+.anim-fade-in { animation: fadeIn 0.5s ease-out both; }
+.anim-scale-in { animation: scaleIn 0.5s ease-out both; }
+.anim-slide-right { animation: slideRight 0.4s ease-out both; }
+.anim-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+
+/* Card hover lift */
+.card-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(52, 211, 153, 0.08);
+}
+
+/* Button press */
+.btn-press {
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: fadeUp 0.4s ease-out both;
+}
+
+/* Glass card */
+.glass-card {
+  background: rgba(21, 28, 44, 0.88);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(52, 211, 153, 0.06);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #34d399 0%, #6ee7b7 50%, #a7f3d0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Chain pill hover */
+.chain-pill {
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.chain-pill:hover {
+  transform: translateY(-1px);
 }
 
 /* Shooting stars */
