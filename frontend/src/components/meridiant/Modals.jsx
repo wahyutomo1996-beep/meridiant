@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Eye, EyeOff, Loader2, Check, Search, Wallet2, Hexagon, Shield, Flame, Layers } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Check, Search, Wallet2, Hexagon, Shield, Flame, Layers, ExternalLink } from 'lucide-react';
 import { wallets, QRIS_IMAGE } from '@/data/mockData';
+import { sendERC20Transfer, sendNativeTransfer, sendSolanaTransfer, isOnChainSupported, getExplorerUrl } from '@/lib/onchain';
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" className="flex-shrink-0">
@@ -26,11 +27,13 @@ const ChainBadge = ({ chain }) => {
   };
   const s = styles[chain];
   if (!s) return null;
-  return (
-    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>
-      {s.label}
-    </span>
-  );
+  return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>{s.label}</span>;
+};
+
+// REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+const handleGoogleAuth = () => {
+  const redirectUrl = window.location.origin + '/';
+  window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
 };
 
 // ========== WALLET CONNECT MODAL ==========
@@ -39,16 +42,14 @@ export const WalletConnectModal = ({ open, onClose, onConnect }) => {
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
 
-  const filtered = wallets.filter(w =>
-    w.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = wallets.filter(w => w.name.toLowerCase().includes(search.toLowerCase()));
 
   const getProvider = (walletId) => {
     if (typeof window === 'undefined') return null;
     switch (walletId) {
       case 'metamask': return window.ethereum?.isMetaMask ? window.ethereum : null;
       case 'okx': return window.okxwallet || null;
-      case 'phantom': return window.phantom?.ethereum || null;
+      case 'phantom': return window.phantom?.ethereum || window.phantom?.solana || null;
       case 'solflare': return window.solflare || null;
       default: return window.ethereum || null;
     }
@@ -59,33 +60,33 @@ export const WalletConnectModal = ({ open, onClose, onConnect }) => {
     setError('');
     try {
       const provider = getProvider(wallet.id);
-      if (provider && wallet.id !== 'solflare') {
-        // EVM wallet connection
+      if (provider && (wallet.id === 'metamask' || wallet.id === 'okx')) {
         const accounts = await provider.request({ method: 'eth_requestAccounts' });
-        if (accounts && accounts.length > 0) {
-          onConnect(wallet, accounts[0]);
-          setSearch('');
-          setConnecting(null);
-          return;
+        if (accounts?.[0]) { onConnect(wallet, accounts[0]); setSearch(''); setConnecting(null); return; }
+      } else if (provider && wallet.id === 'phantom') {
+        // Try Solana first
+        if (window.phantom?.solana) {
+          try {
+            const resp = await window.phantom.solana.connect();
+            if (resp?.publicKey) { onConnect(wallet, resp.publicKey.toString()); setSearch(''); setConnecting(null); return; }
+          } catch { /* try EVM */ }
+        }
+        if (window.phantom?.ethereum) {
+          const accounts = await window.phantom.ethereum.request({ method: 'eth_requestAccounts' });
+          if (accounts?.[0]) { onConnect(wallet, accounts[0]); setSearch(''); setConnecting(null); return; }
         }
       } else if (provider && wallet.id === 'solflare') {
-        // Solana wallet
         try {
           const resp = await provider.connect();
-          if (resp?.publicKey) {
-            onConnect(wallet, resp.publicKey.toString());
-            setSearch('');
-            setConnecting(null);
-            return;
-          }
-        } catch { /* fallthrough to mock */ }
+          if (resp?.publicKey) { onConnect(wallet, resp.publicKey.toString()); setSearch(''); setConnecting(null); return; }
+        } catch { /* fallthrough */ }
       }
-      // Fallback: mock connection if wallet not installed
+      // Mock fallback
+      setError('Wallet not detected. Using demo mode.');
       const mockAddr = '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-      onConnect(wallet, mockAddr);
-      setSearch('');
+      setTimeout(() => { onConnect(wallet, mockAddr); setSearch(''); setError(''); }, 1500);
     } catch (err) {
-      setError(err?.message?.includes('rejected') ? 'Connection rejected by user' : 'Wallet not detected. Using demo mode.');
+      setError(err?.message?.includes('rejected') ? 'Connection rejected by user' : 'Connection failed. Using demo mode.');
       const mockAddr = '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
       setTimeout(() => { onConnect(wallet, mockAddr); setSearch(''); setError(''); }, 1500);
     }
@@ -95,78 +96,46 @@ export const WalletConnectModal = ({ open, onClose, onConnect }) => {
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) setSearch(''); onClose(v); }}>
       <DialogContent className="sm:max-w-md border-gray-700/50 p-0 overflow-hidden" style={{ background: '#111827' }}>
-        {/* Header */}
         <div className="pt-8 pb-4 px-6 text-center">
           <div className="w-16 h-16 rounded-2xl border-2 border-gray-600/40 flex items-center justify-center mx-auto mb-5" style={{ background: '#1a2235' }}>
             <Wallet2 className="w-7 h-7 text-gray-400" />
           </div>
-          <h2 className="text-white text-xl font-bold mb-1">Select your wallet</h2>
+          <DialogTitle className="text-white text-xl font-bold mb-1">Select your wallet</DialogTitle>
           <p className="text-gray-400 text-sm">Connect a wallet to your Meridiant account</p>
         </div>
-
-        {/* Search */}
         <div className="px-5 pb-3">
           <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-gray-700/50" style={{ background: '#0c1120' }}>
             <Search className="w-4 h-4 text-gray-500" />
-            <input
-              type="text" placeholder={`Search through ${wallets.length} wallets...`} value={search} onChange={e => setSearch(e.target.value)}
-              className="bg-transparent text-white text-sm outline-none placeholder:text-gray-500 w-full"
-            />
+            <input type="text" placeholder={`Search through ${wallets.length} wallets...`} value={search} onChange={e => setSearch(e.target.value)}
+              className="bg-transparent text-white text-sm outline-none placeholder:text-gray-500 w-full" data-testid="wallet-search-input" />
           </div>
         </div>
-
-        {/* Wallet list */}
         <div className="px-3 pb-2 max-h-[320px] overflow-y-auto custom-scrollbar">
-          {filtered.length === 0 && (
-            <p className="text-gray-500 text-sm text-center py-6">No wallets found</p>
-          )}
+          {filtered.length === 0 && <p className="text-gray-500 text-sm text-center py-6">No wallets found</p>}
           {filtered.map(w => {
             const cfg = walletIcons[w.id];
             const isConn = connecting === w.id;
             return (
-              <button
-                key={w.id}
-                onClick={() => handleConnect(w)}
-                disabled={!!connecting}
-                className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl hover:bg-white/5 transition-all disabled:opacity-40 group"
-              >
-                {/* Wallet icon */}
+              <button key={w.id} onClick={() => handleConnect(w)} disabled={!!connecting} data-testid={`wallet-${w.id}`}
+                className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl hover:bg-white/5 transition-all disabled:opacity-40 group">
                 <div className="relative flex-shrink-0">
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 overflow-hidden"
-                    style={{ background: w.bgColor || (w.color + '20') }}
-                  >
-                    {isConn ? (
-                      <Loader2 className="w-5 h-5 text-emerald-400 animate-spin" />
-                    ) : w.logo ? (
-                      <img src={w.logo} alt={w.name} className="w-7 h-7 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
-                    ) : (
-                      cfg?.Icon && <cfg.Icon className="w-5 h-5" style={{ color: cfg.color }} />
-                    )}
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 overflow-hidden"
+                    style={{ background: w.bgColor || (w.color + '20') }}>
+                    {isConn ? <Loader2 className="w-5 h-5 text-emerald-400 animate-spin" /> :
+                      w.logo ? <img src={w.logo} alt={w.name} className="w-7 h-7 object-contain" onError={(e) => { e.target.style.display = 'none'; }} /> :
+                      cfg?.Icon && <cfg.Icon className="w-5 h-5" style={{ color: cfg.color }} />}
                   </div>
                   <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#111827]" />
                 </div>
-
-                {/* Name */}
                 <span className="text-white text-sm font-medium flex-1 text-left">{w.name}</span>
-
-                {/* Chain badges */}
-                <div className="flex items-center gap-1.5">
-                  {w.chains.map(c => <ChainBadge key={c} chain={c} />)}
-                </div>
+                <div className="flex items-center gap-1.5">{w.chains.map(c => <ChainBadge key={c} chain={c} />)}</div>
               </button>
             );
           })}
         </div>
-
-        {/* Error */}
         {error && <div className="px-5 pb-2"><p className="text-amber-400 text-xs text-center bg-amber-500/10 rounded-lg py-2 px-3">{error}</p></div>}
-
-        {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-700/30 text-center">
-          <p className="text-gray-500 text-xs">
-            By logging in I agree to the <span className="text-emerald-400 cursor-pointer hover:underline">Terms</span> & <span className="text-emerald-400 cursor-pointer hover:underline">Privacy Policy</span>
-          </p>
+          <p className="text-gray-500 text-xs">By logging in I agree to the <span className="text-emerald-400 cursor-pointer hover:underline">Terms</span> & <span className="text-emerald-400 cursor-pointer hover:underline">Privacy Policy</span></p>
         </div>
       </DialogContent>
     </Dialog>
@@ -185,14 +154,9 @@ export const SignInModal = ({ open, onClose, onSignIn, onSwitchToSignUp }) => {
     e.preventDefault();
     if (!email || !password) { setError('Please fill in all fields'); return; }
     setLoading(true); setError('');
-    try {
-      await onSignIn(email, password);
-      setEmail(''); setPassword('');
-    } catch (err) {
-      setError(err.message || 'Sign in failed');
-    } finally {
-      setLoading(false);
-    }
+    try { await onSignIn(email, password); setEmail(''); setPassword(''); }
+    catch (err) { setError(err.message || 'Sign in failed'); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -206,20 +170,20 @@ export const SignInModal = ({ open, onClose, onSignIn, onSwitchToSignUp }) => {
           {error && <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{error}</div>}
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email"
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email" data-testid="signin-email"
               className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
           </div>
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Password</label>
             <div className="relative">
-              <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password"
+              <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password" data-testid="signin-password"
                 className="w-full rounded-xl px-4 py-3 pr-10 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
               <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
                 {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
-          <button type="submit" disabled={loading}
+          <button type="submit" disabled={loading} data-testid="signin-submit"
             className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />} Sign in
           </button>
@@ -231,7 +195,7 @@ export const SignInModal = ({ open, onClose, onSignIn, onSwitchToSignUp }) => {
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-700/50" /></div>
           <div className="relative flex justify-center text-xs"><span className="px-3 text-gray-500" style={{ background: '#1a2235' }}>OR</span></div>
         </div>
-        <button onClick={() => { setLoading(true); setTimeout(() => { onSignIn('google-user@gmail.com', 'google'); setLoading(false); }, 800); }}
+        <button onClick={handleGoogleAuth} data-testid="google-signin"
           className="w-full py-3 rounded-xl border border-gray-600/50 text-white font-medium text-sm transition-colors hover:bg-white/5 flex items-center justify-center gap-3">
           <GoogleIcon /> Continue with Google
         </button>
@@ -256,14 +220,9 @@ export const SignUpModal = ({ open, onClose, onSignUp, onSwitchToSignIn }) => {
     if (password !== confirmPwd) { setError('Passwords do not match'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
     setLoading(true); setError('');
-    try {
-      await onSignUp(name, email, password);
-      setName(''); setEmail(''); setPassword(''); setConfirmPwd('');
-    } catch (err) {
-      setError(err.message || 'Sign up failed');
-    } finally {
-      setLoading(false);
-    }
+    try { await onSignUp(name, email, password); setName(''); setEmail(''); setPassword(''); setConfirmPwd(''); }
+    catch (err) { setError(err.message || 'Sign up failed'); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -277,18 +236,18 @@ export const SignUpModal = ({ open, onClose, onSignUp, onSwitchToSignIn }) => {
           {error && <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{error}</div>}
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Full Name</label>
-            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your full name"
+            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your full name" data-testid="signup-name"
               className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
           </div>
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email"
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email" data-testid="signup-email"
               className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
           </div>
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Password</label>
             <div className="relative">
-              <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Create a password"
+              <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Create a password" data-testid="signup-password"
                 className="w-full rounded-xl px-4 py-3 pr-10 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
               <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
                 {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -297,10 +256,10 @@ export const SignUpModal = ({ open, onClose, onSignUp, onSwitchToSignIn }) => {
           </div>
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Confirm Password</label>
-            <input type="password" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} placeholder="Confirm your password"
+            <input type="password" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} placeholder="Confirm your password" data-testid="signup-confirm-password"
               className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
           </div>
-          <button type="submit" disabled={loading}
+          <button type="submit" disabled={loading} data-testid="signup-submit"
             className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />} Create account
           </button>
@@ -312,7 +271,7 @@ export const SignUpModal = ({ open, onClose, onSignUp, onSwitchToSignIn }) => {
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-700/50" /></div>
           <div className="relative flex justify-center text-xs"><span className="px-3 text-gray-500" style={{ background: '#1a2235' }}>OR</span></div>
         </div>
-        <button onClick={() => { setLoading(true); setTimeout(() => { onSignUp('Google User', 'google-user@gmail.com', 'google'); setLoading(false); }, 800); }}
+        <button onClick={handleGoogleAuth} data-testid="google-signup"
           className="w-full py-3 rounded-xl border border-gray-600/50 text-white font-medium text-sm transition-colors hover:bg-white/5 flex items-center justify-center gap-3">
           <GoogleIcon /> Continue with Google
         </button>
@@ -321,12 +280,48 @@ export const SignUpModal = ({ open, onClose, onSignUp, onSwitchToSignIn }) => {
   );
 };
 
-// ========== CHECKOUT MODAL ==========
-export const CheckoutModal = ({ open, onClose, data, onConfirm }) => {
+// ========== CHECKOUT MODAL (with on-chain support) ==========
+export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, connectedWallet }) => {
+  const [sending, setSending] = useState(false);
+  const [txError, setTxError] = useState('');
+  const [txResult, setTxResult] = useState(null);
+
   if (!data) return null;
+
   const txId = 'MRD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+  const fromCurrency = data.from?.currency;
+  const chain = fromCurrency?.chain;
+  const tokenCode = fromCurrency?.code;
+  const canOnChain = chain && isOnChainSupported(chain, tokenCode);
+
+  const handleOnChainTransfer = async () => {
+    setSending(true); setTxError('');
+    try {
+      let result;
+      if (chain === 'Solana') {
+        result = await sendSolanaTransfer(tokenCode, data.from.amount);
+      } else if (tokenCode === 'BNB' && chain === 'BSC') {
+        result = await sendNativeTransfer(chain, data.from.amount);
+      } else if (tokenCode === 'MATIC' && chain === 'Polygon') {
+        result = await sendNativeTransfer(chain, data.from.amount);
+      } else {
+        result = await sendERC20Transfer(chain, tokenCode, data.from.amount);
+      }
+      setTxResult(result);
+      onConfirm(result);
+    } catch (err) {
+      setTxError(err.message || 'Transaction failed');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleRegularConfirm = () => {
+    onConfirm(null);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(v) => { if (!sending) { setTxError(''); setTxResult(null); onClose(v); } }}>
       <DialogContent className="sm:max-w-lg border-gray-700/50" style={{ background: '#1a2235' }}>
         <DialogHeader>
           <div className="flex items-center justify-between">
@@ -338,24 +333,61 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm }) => {
           <div className="rounded-xl p-4 space-y-3" style={{ background: '#0c1120' }}>
             <h4 className="text-gray-400 text-sm font-medium">Detail transaction</h4>
             <div className="flex justify-between text-sm"><span className="text-gray-400">Transaction ID</span><span className="text-white font-mono text-xs">{txId}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-400">Amount to send</span><span className="text-white">{data.from?.amount} {data.from?.currency?.code}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-400">You'll receive</span><span className="text-emerald-400">{data.to?.amount} {data.to?.currency?.code}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-400">Amount to send</span><span className="text-white">{data.from?.amount} {data.from?.currency?.displayCode || data.from?.currency?.code}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-400">You'll receive</span><span className="text-emerald-400">{data.to?.amount} {data.to?.currency?.displayCode || data.to?.currency?.code}</span></div>
+            {chain && <div className="flex justify-between text-sm"><span className="text-gray-400">Network</span><span className="text-blue-400">{chain}</span></div>}
             <div className="flex justify-between text-sm"><span className="text-gray-400">Fee</span><span className="text-white">0.5%</span></div>
-            <div className="border-t border-gray-700/40 pt-3 flex justify-between text-sm"><span className="text-gray-400">Total transfer</span><span className="text-white font-medium">{data.from?.amount} {data.from?.currency?.code}</span></div>
+            <div className="border-t border-gray-700/40 pt-3 flex justify-between text-sm"><span className="text-gray-400">Total</span><span className="text-white font-medium">{data.from?.amount} {data.from?.currency?.displayCode || data.from?.currency?.code}</span></div>
           </div>
-          <div className="rounded-xl p-4" style={{ background: '#0c1120' }}>
-            <h4 className="text-gray-400 text-sm font-medium mb-2">How to pay</h4>
-            <p className="text-white text-sm">{data.method?.name || data.destination?.name || 'Bank Transfer'}</p>
-            {(data.method?.id === 'qris' || data.destination?.id === 'qris_withdraw') && (
-              <div className="mt-4 flex flex-col items-center">
-                <div className="bg-white rounded-xl p-3 mb-3">
-                  <img src={QRIS_IMAGE} alt="QRIS Payment" className="w-52 h-52 object-contain" />
+
+          {canOnChain && (
+            <div className="rounded-xl p-4 border border-emerald-500/20" style={{ background: 'rgba(16,185,129,0.05)' }}>
+              <h4 className="text-emerald-400 text-sm font-medium mb-2 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> On-Chain Transfer
+              </h4>
+              <p className="text-gray-400 text-xs mb-1">This transaction will be executed on <span className="text-white">{chain}</span> blockchain.</p>
+              <p className="text-gray-500 text-xs">Your wallet will prompt you to sign the transaction.</p>
+            </div>
+          )}
+
+          {!canOnChain && (
+            <div className="rounded-xl p-4" style={{ background: '#0c1120' }}>
+              <h4 className="text-gray-400 text-sm font-medium mb-2">How to pay</h4>
+              <p className="text-white text-sm">{data.method?.name || data.destination?.name || 'Bank Transfer'}</p>
+              {(data.method?.id === 'qris' || data.destination?.id === 'qris_withdraw') && (
+                <div className="mt-4 flex flex-col items-center">
+                  <div className="bg-white rounded-xl p-3 mb-3">
+                    <img src={QRIS_IMAGE} alt="QRIS Payment" className="w-52 h-52 object-contain" />
+                  </div>
+                  <p className="text-gray-400 text-xs text-center">Scan QR code above using your banking or e-wallet app</p>
                 </div>
-                <p className="text-gray-400 text-xs text-center">Scan QR code above using your banking or e-wallet app</p>
-              </div>
-            )}
-          </div>
-          <button onClick={onConfirm} className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors">Confirm and pay</button>
+              )}
+            </div>
+          )}
+
+          {txError && <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{txError}</div>}
+
+          {txResult && (
+            <div className="rounded-xl p-4 border border-emerald-500/30" style={{ background: 'rgba(16,185,129,0.08)' }}>
+              <p className="text-emerald-400 text-sm font-medium mb-2">Transaction submitted!</p>
+              <a href={txResult.blockExplorer} target="_blank" rel="noopener noreferrer"
+                className="text-blue-400 text-xs hover:underline flex items-center gap-1">
+                View on explorer <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          )}
+
+          {canOnChain ? (
+            <button onClick={handleOnChainTransfer} disabled={sending} data-testid="onchain-confirm"
+              className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+              {sending ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing transaction...</> : 'Sign & Send On-Chain'}
+            </button>
+          ) : (
+            <button onClick={handleRegularConfirm} data-testid="regular-confirm"
+              className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors">
+              Confirm and pay
+            </button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -368,9 +400,8 @@ export const ProcessingModal = ({ open }) => (
     <DialogContent className="sm:max-w-md border-gray-700/50 [&>button]:hidden" style={{ background: '#1a2235' }}>
       <div className="text-center py-8">
         <div className="w-16 h-16 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin mx-auto mb-6" />
-        <h3 className="text-white text-lg font-medium mb-2">Transaction in progress</h3>
+        <DialogTitle className="text-white text-lg font-medium mb-2">Transaction in progress</DialogTitle>
         <p className="text-gray-400 text-sm">Please wait while we process your transaction...</p>
-        <div className="text-amber-400 font-mono text-2xl mt-4">00:10:00</div>
       </div>
     </DialogContent>
   </Dialog>
@@ -385,16 +416,16 @@ export const CompleteModal = ({ open, onClose, data }) => (
           <Check className="w-8 h-8 text-emerald-400" />
         </div>
         <p className="text-gray-400 text-sm mb-1">Transaction submitted</p>
-        <h3 className="text-white text-lg font-medium mb-6">Yay! Your {data?.type === 'transfer' ? 'transfer' : 'withdrawal'} is completed!</h3>
+        <DialogTitle className="text-white text-lg font-medium mb-6">Yay! Your {data?.type === 'transfer' ? 'transfer' : 'withdrawal'} is completed!</DialogTitle>
         {data && (
           <div className="rounded-xl p-4 text-left mb-5" style={{ background: '#0c1120' }}>
             <div className="space-y-2">
-              <div className="flex justify-between text-sm"><span className="text-gray-400">Sent</span><span className="text-white">{data.from?.amount} {data.from?.currency?.code}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-gray-400">Received</span><span className="text-emerald-400">{data.to?.amount} {data.to?.currency?.code}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-400">Sent</span><span className="text-white">{data.from?.amount} {data.from?.currency?.displayCode || data.from?.currency?.code}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-400">Received</span><span className="text-emerald-400">{data.to?.amount} {data.to?.currency?.displayCode || data.to?.currency?.code}</span></div>
             </div>
           </div>
         )}
-        <button onClick={onClose} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors">Done</button>
+        <button onClick={onClose} data-testid="transaction-done" className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors">Done</button>
       </div>
     </DialogContent>
   </Dialog>
