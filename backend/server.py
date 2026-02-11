@@ -520,6 +520,7 @@ async def create_transaction(data: TransactionCreate, user=Depends(get_current_u
         "to_currency": data.to_currency, "to_amount": data.to_amount,
         "method_or_dest": data.method_or_dest, "status": tx_doc["status"],
         "tx_hash": data.tx_hash, "chain": data.chain,
+        "trade_fee": trade_fee, "platform_fee": platform_fee, "total_fee": total_fee,
         "created_at": tx_doc["created_at"]
     }
 
