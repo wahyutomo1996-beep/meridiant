@@ -414,7 +414,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
         <p className="text-center text-gray-500 text-sm mb-5">Quote updates in {quoteTimer}s</p>
 
-        <button onClick={handleSubmit} className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors active:scale-[0.98]">
+        <button onClick={handleSubmit} data-testid="transfer-submit-btn" className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-all active:scale-[0.98] shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 btn-press">
           {btnText}
         </button>
       </div>
