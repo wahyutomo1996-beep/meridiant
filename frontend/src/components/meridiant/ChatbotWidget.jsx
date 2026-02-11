@@ -36,11 +36,11 @@ const ChatbotWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50" data-testid="chatbot-widget">
+    <div className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50" data-testid="chatbot-widget">
       {/* Chat Window */}
       {isOpen && (
         <div
-          className="mb-3 w-[340px] sm:w-[380px] rounded-2xl overflow-hidden shadow-2xl border border-gray-700/40 anim-scale-in flex flex-col"
+          className="mb-3 w-[calc(100vw-2rem)] sm:w-[380px] rounded-2xl overflow-hidden shadow-2xl border border-gray-700/40 anim-scale-in flex flex-col"
           style={{ background: '#0f1729', maxHeight: 'min(520px, 70vh)' }}
           data-testid="chatbot-window"
         >
