@@ -62,13 +62,7 @@ const ChainBadge = ({ chain }) => {
   return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>{s.label}</span>;
 };
 
-// REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-const handleGoogleAuth = () => {
-  const redirectUrl = window.location.origin + '/';
-  window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
-};
-
-// ========== WALLET CONNECT MODAL ==========
+const ChainBadge = ({ chain }) => {
 export const WalletConnectModal = ({ open, onClose, onConnect }) => {
   const [connecting, setConnecting] = useState(null);
   const [search, setSearch] = useState('');
