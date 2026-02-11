@@ -126,6 +126,7 @@ function AppContent() {
   const [activeModal, setActiveModal] = useState(null);
   const [transactionData, setTransactionData] = useState(null);
   const [currentPage, setCurrentPage] = useState("home");
+  const [theme, setTheme] = useState(() => localStorage.getItem('mrd-theme') || 'dark');
   const [liveRates, setLiveRates] = useState(fallbackRates);
   const [realBalances, setRealBalances] = useState(null);
 
