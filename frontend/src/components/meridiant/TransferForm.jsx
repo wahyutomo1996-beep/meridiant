@@ -332,8 +332,8 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
   );
 
   return (
-    <div className="w-full max-w-[500px] mx-auto">
-      <div className="rounded-2xl p-6 md:p-7" style={{ background: 'rgba(21, 28, 44, 0.88)', backdropFilter: 'blur(16px)', border: '1px solid rgba(52, 211, 153, 0.06)' }}>
+    <div className="w-full max-w-[500px] mx-auto px-1">
+      <div className="rounded-2xl p-5 sm:p-6 md:p-7 glass-card anim-pulse-glow card-lift">
         <div className="flex gap-8 mb-6">
           {['transfer', 'withdraw'].map(tab => (
             <button key={tab} onClick={() => handleTabSwitch(tab)}
