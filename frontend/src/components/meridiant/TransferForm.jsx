@@ -136,7 +136,7 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
 
   return (
     <Dialog open={open} onOpenChange={() => { setSearch(''); setSelectedNetwork('all'); onClose(); }}>
-      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 gap-0 max-h-[85vh] flex flex-col [&>button]:hidden" style={{ background: '#111827' }}>
+      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 gap-0 max-h-[85vh] sm:max-h-[85vh] h-[100dvh] sm:h-auto flex flex-col [&>button]:hidden sm:rounded-2xl rounded-none" style={{ background: '#111827' }}>
         <div className="flex items-center justify-between p-5 pb-3 flex-shrink-0">
           <DialogTitle className="text-white text-lg font-semibold">Select a token</DialogTitle>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
