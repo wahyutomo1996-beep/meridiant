@@ -291,13 +291,14 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
     if (!fromAmount || isNaN(parseFloat(fromAmount))) { setToAmount(''); return; }
     const fromKey = fromCurrency.displayCode || fromCurrency.code;
     const toKey = toCurrency.displayCode || toCurrency.code;
-    const rate = exchangeRates[`${fromKey}_${toKey}`];
+    const rates = liveRates || exchangeRates;
+    const rate = rates[`${fromKey}_${toKey}`];
     if (rate) {
       const result = parseFloat(fromAmount) * rate;
       const isFiatOutput = activeTab === 'withdraw';
       setToAmount(formatAmount(result, isFiatOutput));
     } else { setToAmount('0'); }
-  }, [fromAmount, fromCurrency, toCurrency, activeTab]);
+  }, [fromAmount, fromCurrency, toCurrency, activeTab, liveRates]);
 
   const handleTabSwitch = (tab) => {
     setActiveTab(tab); setFromAmount(''); setToAmount('');
