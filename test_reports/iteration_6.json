@@ -1,0 +1,96 @@
+{
+  "summary": "Iteration 6 Testing Complete - All new UI/UX features for Transfer Method and Withdraw Destination verified. Backend minimum amount validation (Rp 10,000) working. Frontend method picker modal with bank/e-wallet logos, fees, and ETAs all functional.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration6_min_amount.py",
+    "/app/test_reports/pytest/pytest_results_iteration6.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_iteration6_min_amount.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 tests passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "test_user": "test@meridiant.com / Test1234!",
+    "admin": "admin@meridiant.com / Admin1234!"
+  },
+  "seed_data_creation": "None new - using existing test user",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 6 features all working: Method picker modal with card-style items, logos (BCA, BNI, Mandiri, BRI, CIMB Niaga, Permata, GoPay, OVO, DANA, ShopeePay, LinkAja, QRIS), fee display (Gratis for transfer, Rp 2,500 for bank withdraw, Rp 1,000 for e-wallet withdraw), ETA display. Minimum amount validation (Rp 10,000 for IDR transfers) working on both backend and frontend. Fee estimation box shows when amount > 0.",
+  "test_results": {
+    "backend_api_tests": {
+      "reject_amount_below_minimum": "PASSED - POST /api/transactions returns 400 for amount < 10,000 IDR",
+      "accept_amount_at_minimum": "PASSED - POST /api/transactions returns 200 for amount = 10,000 IDR",
+      "accept_amount_above_minimum": "PASSED - POST /api/transactions returns 200 for amount > 10,000 IDR",
+      "non_idr_transfer_no_minimum": "PASSED - Non-IDR transfers bypass minimum check",
+      "withdraw_no_idr_minimum_check": "PASSED - Withdraw type bypasses minimum check",
+      "signin_success": "PASSED - Auth endpoints working",
+      "signin_invalid_credentials": "PASSED - Invalid credentials rejected",
+      "signup_duplicate_email": "PASSED - Duplicate email rejected",
+      "api_health": "PASSED - /api/ returns 200",
+      "prices_endpoint": "PASSED - /api/prices returns rates"
+    },
+    "frontend_ui_tests": {
+      "min_hint_visible": "PASSED - 'Min. Rp 10,000' hint text visible under Transfer input",
+      "amount_error_message": "PASSED - Error 'Minimum pembelian Rp 10,000' shown when amount < 10,000",
+      "submit_button_disabled_on_error": "PASSED - Submit button disabled when amount error exists",
+      "fee_estimation_visible": "PASSED - Fee estimation box shows Estimasi, Fee jaringan, Total biaya",
+      "method_picker_opens_as_modal": "PASSED - 'Pilih Metode Transfer' modal opens correctly",
+      "method_picker_3_categories": "PASSED - Bank Transfer, E-Wallet, QRIS categories visible",
+      "method_picker_6_banks": "PASSED - BCA, BNI, Mandiri, BRI, CIMB Niaga, Permata all present",
+      "method_picker_5_ewallets": "PASSED - GoPay, OVO, DANA, ShopeePay, LinkAja all present",
+      "method_picker_qris": "PASSED - QRIS option visible",
+      "method_picker_fees_etas": "PASSED - 12 'Gratis' labels, 12 'Instan' labels found",
+      "selected_method_card": "PASSED - BCA shows as card with logo, 'Gratis', 'Instan'",
+      "withdraw_dest_bank_fee": "PASSED - 6 bank destinations show Rp 2,500 fee",
+      "withdraw_dest_ewallet_fee": "PASSED - 5 e-wallet destinations show Rp 1,000 fee",
+      "mobile_method_picker_fullscreen": "PASSED - Modal 390x717px on 390px viewport",
+      "chatbot_widget_visible": "PASSED - Made with Emergent widget visible on mobile",
+      "history_explorer_links": "PASSED - 5 explorer links found with data-testid",
+      "copy_wallet_btn_code": "VERIFIED - data-testid='copy-wallet-btn' present in code (shows when wallet connected)"
+    }
+  },
+  "features_verified": {
+    "method_picker_modal": {
+      "status": "WORKING",
+      "details": "Card-style modal with real bank logos, 3 categories (Bank Transfer, E-Wallet, QRIS), 6 banks, 5 e-wallets, 1 QRIS"
+    },
+    "minimum_amount_validation": {
+      "status": "WORKING",
+      "details": "Backend returns 400 for <10,000 IDR. Frontend shows error message and disables submit button."
+    },
+    "fee_estimation_display": {
+      "status": "WORKING",
+      "details": "Shows Estimasi yang diterima, Fee jaringan (~Rp 5,000), Total biaya when amount > 0"
+    },
+    "withdraw_destination_fees": {
+      "status": "WORKING",
+      "details": "Bank: Rp 2,500 fee. E-Wallet: Rp 1,000 fee. QRIS: Rp 0 (Gratis)"
+    },
+    "explorer_links_in_history": {
+      "status": "WORKING",
+      "details": "External link icons on completed transactions with data-testid='tx-explorer-{id}'"
+    },
+    "copy_wallet_button": {
+      "status": "CODE VERIFIED",
+      "details": "Button with data-testid='copy-wallet-btn' in ProfilePages.jsx line 128, shows when wallet connected"
+    },
+    "mobile_fullscreen_modal": {
+      "status": "WORKING",
+      "details": "Method picker is near-fullscreen (390x717px) on 390px mobile viewport"
+    }
+  }
+}
