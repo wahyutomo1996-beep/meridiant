@@ -23,7 +23,6 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('meridiant_token');
-      localStorage.removeItem('meridiant_user');
     }
     return Promise.reject(error);
   }
@@ -33,12 +32,14 @@ api.interceptors.response.use(
 export const authAPI = {
   signup: (name, email, password) => api.post('/auth/signup', { name, email, password }),
   signin: (email, password) => api.post('/auth/signin', { email, password }),
+  googleSession: (session_id) => api.post('/auth/google-session', { session_id }),
   getMe: () => api.get('/auth/me'),
 };
 
 // Wallet
 export const walletAPI = {
-  connect: (wallet_id, wallet_name) => api.post('/wallet/connect', { wallet_id, wallet_name }),
+  connect: (wallet_id, wallet_name, wallet_address) =>
+    api.post('/wallet/connect', { wallet_id, wallet_name, wallet_address }),
   disconnect: () => api.delete('/wallet/disconnect'),
 };
 
@@ -48,9 +49,9 @@ export const transactionAPI = {
   list: () => api.get('/transactions'),
 };
 
-// Exchange Rates
-export const ratesAPI = {
-  get: () => api.get('/exchange-rates'),
+// Live Prices
+export const pricesAPI = {
+  get: () => api.get('/prices'),
 };
 
 export default api;
