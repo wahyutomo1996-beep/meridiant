@@ -1,0 +1,14 @@
+node_modules
+frontend/node_modules
+.git
+.emergent
+__pycache__
+*.pyc
+test_reports
+tests
+backend/tests
+*.md
+!DEPLOYMENT.md
+.env
+backend/.env
+frontend/.env
