@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from '../ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import {
   fiatCurrencies, cryptoCurrencies, transferMethodGroups,
-  withdrawDestGroups, exchangeRates
+  withdrawDestGroups, exchangeRates, chainLogos
 } from '@/data/mockData';
 
 const networks = [
@@ -29,12 +29,29 @@ const FlagIcon = ({ colors }) => (
   </div>
 );
 
-const CryptoIcon = ({ color, code, size = 5 }) => (
-  <div className={`w-${size} h-${size} rounded-full flex items-center justify-center flex-shrink-0`}
-    style={{ background: color, width: size * 4 + 'px', height: size * 4 + 'px' }}>
-    <span className="text-white font-bold" style={{ fontSize: Math.max(9, size * 2.2) + 'px' }}>{code[0]}</span>
-  </div>
-);
+// Real crypto icon with logo image and fallback
+const CryptoIcon = ({ token, size = 20 }) => {
+  const [imgError, setImgError] = useState(false);
+  if (token?.logo && !imgError) {
+    return (
+      <img
+        src={token.logo}
+        alt={token.code}
+        width={size}
+        height={size}
+        className="rounded-full flex-shrink-0 object-cover"
+        style={{ width: size, height: size }}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+  return (
+    <div className="rounded-full flex items-center justify-center flex-shrink-0"
+      style={{ background: token?.color || '#555', width: size, height: size }}>
+      <span className="text-white font-bold" style={{ fontSize: Math.max(8, size * 0.4) }}>{token?.code?.[0] || '?'}</span>
+    </div>
+  );
+};
 
 const categoryIcons = { 'Bank Transfer': Building2, 'Bank': Building2, 'E-Wallet': Smartphone, 'QRIS': QrCode };
 
@@ -51,15 +68,14 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
 
   const filtered = useMemo(() => {
     let list = currencies;
-    if (selectedNetwork !== 'all') {
-      list = list.filter(c => c.chain === selectedNetwork);
-    }
+    if (selectedNetwork !== 'all') list = list.filter(c => c.chain === selectedNetwork);
     if (search) {
       const q = search.toLowerCase();
       list = list.filter(c =>
         c.code.toLowerCase().includes(q) ||
         c.name.toLowerCase().includes(q) ||
-        (c.chain || '').toLowerCase().includes(q)
+        (c.chain || '').toLowerCase().includes(q) ||
+        (c.displayCode || '').toLowerCase().includes(q)
       );
     }
     return list;
@@ -70,13 +86,13 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
 
   if (type === 'fiat') {
     return (
-      <Dialog open={open} onOpenChange={(v) => { if (!v) { setSearch(''); } onClose(); }}>
+      <Dialog open={open} onOpenChange={() => { setSearch(''); onClose(); }}>
         <DialogContent className="sm:max-w-sm border-gray-700/50 p-0" style={{ background: '#111827' }}>
           <div className="p-5 pb-3"><h2 className="text-white text-lg font-semibold">Select currency</h2></div>
           <div className="pb-3 max-h-[300px] overflow-y-auto custom-scrollbar">
             {currencies.map(c => (
               <button key={c.code} onClick={() => handleSelect(c)}
-                className={`flex items-center gap-3 w-full px-5 py-3 hover:bg-white/5 ${(selected.code) === c.code ? 'bg-emerald-500/10' : ''}`}>
+                className={`flex items-center gap-3 w-full px-5 py-3 hover:bg-white/5 ${selected.code === c.code ? 'bg-emerald-500/10' : ''}`}>
                 <FlagIcon colors={c.flagColors} />
                 <div className="text-left"><p className="text-white text-sm font-medium">{c.code}</p><p className="text-gray-400 text-xs">{c.name}</p></div>
               </button>
@@ -88,9 +104,8 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) { setSearch(''); setSelectedNetwork('all'); } onClose(); }}>
+    <Dialog open={open} onOpenChange={() => { setSearch(''); setSelectedNetwork('all'); onClose(); }}>
       <DialogContent className="sm:max-w-md border-gray-700/50 p-0 gap-0 max-h-[85vh] flex flex-col [&>button]:hidden" style={{ background: '#111827' }}>
-        {/* Header */}
         <div className="flex items-center justify-between p-5 pb-3 flex-shrink-0">
           <h2 className="text-white text-lg font-semibold">Select a token</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
@@ -98,7 +113,6 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
           </button>
         </div>
 
-        {/* Search + Network filter */}
         <div className="px-5 pb-3 flex-shrink-0">
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-700/50" style={{ background: '#0c1120' }}>
             <Search className="w-4 h-4 text-gray-500 flex-shrink-0" />
@@ -107,22 +121,22 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
             <div className="relative flex-shrink-0">
               <button onClick={() => setShowNetworks(!showNetworks)}
                 className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">
-                {currentNet?.color ? (
-                  <div className="w-4 h-4 rounded-full" style={{ background: currentNet.color }} />
+                {currentNet?.id !== 'all' && chainLogos[currentNet?.id] ? (
+                  <img src={chainLogos[currentNet.id]} alt="" className="w-5 h-5 rounded-full" />
                 ) : (
-                  <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500" />
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500" />
                 )}
                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showNetworks ? 'rotate-180' : ''}`} />
               </button>
               {showNetworks && (
-                <div className="absolute right-0 top-full mt-1 w-52 rounded-xl border border-gray-700/50 shadow-2xl z-50 max-h-[300px] overflow-y-auto custom-scrollbar" style={{ background: '#1a2235' }}>
+                <div className="absolute right-0 top-full mt-1 w-56 rounded-xl border border-gray-700/50 shadow-2xl z-50 max-h-[300px] overflow-y-auto custom-scrollbar" style={{ background: '#1a2235' }}>
                   {networks.map(n => (
                     <button key={n.id} onClick={() => { setSelectedNetwork(n.id); setShowNetworks(false); }}
                       className={`flex items-center gap-3 w-full px-4 py-2.5 hover:bg-white/5 text-sm ${selectedNetwork === n.id ? 'bg-emerald-500/10' : ''}`}>
-                      {n.color ? <div className="w-5 h-5 rounded-full" style={{ background: n.color }} />
+                      {chainLogos[n.id] ? <img src={chainLogos[n.id]} alt="" className="w-5 h-5 rounded-full" />
                         : <div className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500" />}
-                      <span className="text-white">{n.name}</span>
-                      {selectedNetwork === n.id && <span className="ml-auto text-emerald-400 text-xs">✓</span>}
+                      <span className="text-white flex-1 text-left">{n.name}</span>
+                      {selectedNetwork === n.id && <span className="text-emerald-400 text-xs font-bold">✓</span>}
                     </button>
                   ))}
                 </div>
@@ -131,7 +145,6 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
           </div>
         </div>
 
-        {/* Quick-select popular tokens */}
         {popularTokens.length > 0 && selectedNetwork === 'all' && !search && (
           <div className="px-5 pb-3 flex gap-2 flex-wrap flex-shrink-0">
             {popularTokens.map((t, i) => {
@@ -139,7 +152,7 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
               return (
                 <button key={t.code + i} onClick={() => handleSelect(t)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${isActive ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-gray-700/40 hover:border-gray-600/60 bg-gray-800/40'}`}>
-                  <CryptoIcon color={t.color} code={t.code} size={5} />
+                  <CryptoIcon token={t} size={20} />
                   <span className="text-white text-xs font-medium">{t.code}</span>
                 </button>
               );
@@ -147,13 +160,11 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
           </div>
         )}
 
-        {/* Section header */}
         <div className="px-5 py-2 flex items-center gap-2 text-gray-500 text-xs font-medium flex-shrink-0">
           <TrendingUp className="w-3.5 h-3.5" />
           <span>Tokens by 24H volume</span>
         </div>
 
-        {/* Token list */}
         <div className="flex-1 overflow-y-auto custom-scrollbar pb-3 min-h-0">
           {filtered.length === 0 ? (
             <p className="text-gray-500 text-sm text-center py-8">No tokens found</p>
@@ -165,12 +176,17 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
               return (
                 <button key={key + i} onClick={() => handleSelect(c)}
                   className={`flex items-center gap-3.5 w-full px-5 py-3 hover:bg-white/5 transition-colors ${isSelected ? 'bg-emerald-500/8' : ''}`}>
-                  <CryptoIcon color={c.color} code={c.code} size={9} />
+                  <div className="relative flex-shrink-0">
+                    <CryptoIcon token={c} size={36} />
+                    {c.chain && chainLogos[c.chain] && (
+                      <img src={chainLogos[c.chain]} alt="" className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#111827]" />
+                    )}
+                  </div>
                   <div className="text-left flex-1 min-w-0">
                     <p className="text-white text-sm font-semibold">{c.name.split('(')[0].trim()}</p>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-400 text-xs">{c.displayCode || c.code}</span>
-                      {mockAddr && <span className="text-gray-600 text-xs">{mockAddr}</span>}
+                      {mockAddr && <span className="text-gray-600 text-[11px] truncate">{mockAddr}</span>}
                     </div>
                   </div>
                   {c.chain && (
@@ -244,8 +260,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
     if (!fromAmount || isNaN(parseFloat(fromAmount))) { setToAmount(''); return; }
     const fromKey = fromCurrency.displayCode || fromCurrency.code;
     const toKey = toCurrency.displayCode || toCurrency.code;
-    const key = `${fromKey}_${toKey}`;
-    const rate = exchangeRates[key];
+    const rate = exchangeRates[`${fromKey}_${toKey}`];
     if (rate) {
       const result = parseFloat(fromAmount) * rate;
       setToAmount(activeTab === 'transfer' ? result.toFixed(8) : result.toLocaleString('id-ID'));
@@ -277,7 +292,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
 
   const CurrencyBtn = ({ currency, type, onClick }) => (
     <button onClick={onClick} className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-600/30 transition-colors flex-shrink-0" style={{ background: 'rgba(75,85,99,0.3)' }}>
-      {type === 'fiat' ? <FlagIcon colors={currency.flagColors} /> : <CryptoIcon color={currency.color} code={currency.code} size={5} />}
+      {type === 'fiat' ? <FlagIcon colors={currency.flagColors} /> : <CryptoIcon token={currency} size={20} />}
       <span className="text-white text-sm font-medium">{currency.displayCode || currency.code}</span>
       <ChevronDown className="w-3 h-3 text-gray-400" />
     </button>
@@ -342,7 +357,6 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
         </button>
       </div>
 
-      {/* Token selector modals */}
       <TokenSelectorModal open={showFromPicker} onClose={() => setShowFromPicker(false)} currencies={fromList} selected={fromCurrency} onSelect={setFromCurrency} type={fromType} />
       <TokenSelectorModal open={showToPicker} onClose={() => setShowToPicker(false)} currencies={toList} selected={toCurrency} onSelect={setToCurrency} type={toType} />
     </div>
