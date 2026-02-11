@@ -295,7 +295,7 @@ function AppContent() {
           onSignOut={handleSignOut}
           onNavigate={setCurrentPage}
         />
-        <main className={`flex-1 flex flex-col ${isHomePage ? 'items-center justify-center' : 'items-start pt-6'} px-4 pb-20`}>
+        <main className={`flex-1 flex flex-col ${isHomePage ? 'items-center justify-center' : 'items-start pt-4 sm:pt-6'} px-3 sm:px-4 pb-20`}>
           {isHomePage && (
             <>
               {!isLoggedIn && <HeroSection onGetStarted={() => setActiveModal("signup")} />}
