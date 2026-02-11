@@ -301,4 +301,8 @@ export const exchangeRates = {
   OP_IDR: 25600,
   LINK_IDR: 230000,
   UNI_IDR: 160000,
+  TON_IDR: 50000,
+  IDR_TON: 0.00002,
+  'USDT.TON_IDR': 16400,
+  'IDR_USDT.TON': 0.0000609,
 };
