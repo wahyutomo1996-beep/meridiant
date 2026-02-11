@@ -453,6 +453,15 @@ async def disconnect_wallet(user=Depends(get_current_user)):
 
 @api_router.post("/transactions")
 async def create_transaction(data: TransactionCreate, user=Depends(get_current_user)):
+    # Validate minimum amount for IDR transfers
+    if data.type == 'transfer' and data.from_currency == 'IDR':
+        try:
+            amt = float(data.from_amount)
+            if amt < MIN_AMOUNT_IDR:
+                raise HTTPException(status_code=400, detail=f"Minimum pembelian Rp {MIN_AMOUNT_IDR:,}")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid amount")
+
     tx_id = "MRD-" + uuid.uuid4().hex[:8].upper()
     tx_doc = {
         "_id": tx_id,
