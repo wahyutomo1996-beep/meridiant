@@ -3,6 +3,20 @@ import { ArrowLeft, Pencil, Save, Wallet, Plus, Trash2, Building2, Smartphone, C
 import { authAPI, walletAPI, transactionAPI } from '@/lib/api';
 import api from '@/lib/api';
 
+const getExplorerUrl = (chain, txHash) => {
+  const explorers = {
+    'BSC': 'https://bscscan.com/tx/',
+    'Polygon': 'https://polygonscan.com/tx/',
+    'Ethereum': 'https://etherscan.io/tx/',
+    'Arbitrum': 'https://arbiscan.io/tx/',
+    'Optimism': 'https://optimistic.etherscan.io/tx/',
+    'Base': 'https://basescan.org/tx/',
+    'Avalanche': 'https://snowtrace.io/tx/',
+    'Solana': 'https://solscan.io/tx/',
+  };
+  return (explorers[chain] || 'https://etherscan.io/tx/') + txHash;
+};
+
 const PageShell = ({ title, onBack, children }) => (
   <div className="w-full max-w-2xl mx-auto px-1">
     <div className="mb-6 flex items-center gap-3">
