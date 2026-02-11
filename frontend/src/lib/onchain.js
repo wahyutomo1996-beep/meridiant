@@ -69,11 +69,11 @@ export async function getTokenBalance(chain, tokenCode, walletAddress) {
   const contractAddress = TOKEN_CONTRACTS[chain]?.[tokenCode];
   if (!contractAddress) return null;
 
-  const rpcUrl = CHAIN_CONFIG[chain]?.rpcUrls[0];
-  if (!rpcUrl) return null;
+  const config = CHAIN_CONFIG[chain];
+  if (!config) return null;
 
   try {
-    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const provider = new ethers.JsonRpcProvider(config.rpcUrls[0]);
     const contract = new ethers.Contract(contractAddress, ERC20_ABI, provider);
     const [balance, decimals] = await Promise.all([
       contract.balanceOf(walletAddress),
@@ -81,8 +81,19 @@ export async function getTokenBalance(chain, tokenCode, walletAddress) {
     ]);
     return ethers.formatUnits(balance, decimals);
   } catch (e) {
-    console.error('Balance fetch error:', e);
-    return null;
+    // Try fallback RPC
+    try {
+      const provider = new ethers.JsonRpcProvider(config.fallbackRpc);
+      const contract = new ethers.Contract(contractAddress, ERC20_ABI, provider);
+      const [balance, decimals] = await Promise.all([
+        contract.balanceOf(walletAddress),
+        contract.decimals(),
+      ]);
+      return ethers.formatUnits(balance, decimals);
+    } catch {
+      console.error('Balance fetch error:', e);
+      return null;
+    }
   }
 }
 
