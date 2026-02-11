@@ -356,7 +356,9 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
           </div>
           {activeTab === 'withdraw' && (() => {
             const balKey = fromCurrency.displayCode || fromCurrency.code;
-            const bal = mockBalances[balKey] || 0;
+            const realBal = realBalances?.[balKey];
+            const bal = realBal !== undefined && realBal !== null ? parseFloat(realBal) : (mockBalances[balKey] || 0);
+            const isReal = realBal !== undefined && realBal !== null;
             return (
               <div className="mt-2">
                 <div className="flex items-center justify-between mb-2">
