@@ -258,6 +258,12 @@ export const HistoryTransactionsPage = ({ onBack }) => {
                 <div className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${tx.status === 'completed' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}`}>
                   {tx.status}
                 </div>
+                {tx.tx_hash && (
+                  <a href={getExplorerUrl(tx.chain, tx.tx_hash)} target="_blank" rel="noopener noreferrer"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors flex-shrink-0" data-testid={`tx-explorer-${tx.id}`}>
+                    <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+                  </a>
+                )}
               </div>
             ))}
           </div>
