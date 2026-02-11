@@ -447,10 +447,11 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
         <div className="mb-4">
           <label className="text-gray-400 text-sm mb-2 block">{activeTab === 'transfer' ? 'Transfer' : 'From'}</label>
-          <div className={`flex items-center gap-2 rounded-xl px-3 py-3 border ${amountError ? 'border-red-500/40' : 'border-transparent'}`} style={{ background: '#0c1120' }}>
+          <div className={`flex items-center gap-2 rounded-xl px-3 py-3 border overflow-hidden ${amountError ? 'border-red-500/40' : 'border-transparent'}`} style={{ background: '#0c1120' }}>
             <CurrencyBtn currency={fromCurrency} type={fromType} onClick={() => setShowFromPicker(true)} />
-            <input type="number" placeholder="0" value={fromAmount} onChange={e => setFromAmount(e.target.value)}
-              className="flex-1 bg-transparent text-white text-right text-base outline-none placeholder:text-gray-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+            <input type="number" inputMode="decimal" placeholder="0" value={fromAmount} onChange={e => setFromAmount(e.target.value)}
+              data-testid="from-amount-input"
+              className="w-0 flex-1 min-w-0 bg-transparent text-white text-right text-sm sm:text-base outline-none placeholder:text-gray-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           </div>
           {amountError && (
             <div className="flex items-center gap-1.5 mt-1.5 px-1" data-testid="amount-error">
