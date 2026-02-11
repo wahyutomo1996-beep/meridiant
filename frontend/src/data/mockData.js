@@ -204,6 +204,8 @@ export const withdrawDestGroups = [
 // Exchange rates (IDR market)
 export const exchangeRates = {
   IDR_IDRT: 1,
+  'IDR_IDRT.BSC': 1,
+  'IDR_IDRT.Poly': 1,
   IDR_ETH: 0.0000000384,
   'IDR_ETH.Base': 0.0000000384,
   'IDR_ETH.Arb': 0.0000000384,
