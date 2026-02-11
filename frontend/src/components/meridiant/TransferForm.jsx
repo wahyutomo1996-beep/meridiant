@@ -21,7 +21,7 @@ const networks = [
   { id: 'TON', name: 'TON', color: '#0098EA' },
 ];
 
-const popularTokenCodes = ['ETH', 'USDC', 'USDT', 'WBTC', 'SOL'];
+const popularTokenCodes = ['ETH', 'USDC', 'USDT', 'WBTC', 'SOL', 'TON'];
 
 const FlagIcon = ({ colors }) => (
   <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 border border-gray-600/40">
