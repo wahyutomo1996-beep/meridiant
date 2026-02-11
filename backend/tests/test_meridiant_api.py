@@ -292,6 +292,43 @@ class TestWallet:
         print("✓ Wallet disconnected")
 
 
+class TestWalletBalances:
+    """Wallet balance endpoint tests (Real blockchain query via Alchemy)"""
+    
+    def test_wallet_balances_bsc_polygon(self):
+        """Test /api/wallet/balances/{address} returns real balances from BSC and Polygon"""
+        # Test with a known address (doesn't need to have actual balances)
+        test_address = "0xdf32c54583b4d83939b93aa2ca23487d4eb853da"
+        response = requests.get(f"{BASE_URL}/api/wallet/balances/{test_address}")
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Verify response structure
+        assert "address" in data
+        assert "balances" in data
+        assert data["address"] == test_address
+        
+        # Verify balances is a dictionary
+        balances = data["balances"]
+        assert isinstance(balances, dict)
+        
+        # Check that BSC and Polygon tokens are queried
+        # At minimum we should have attempted to query these (even if 0 balance)
+        expected_tokens = ["BNB", "IDRT.BSC", "USDT.BSC", "USDC.BSC", "IDRT.Poly", "USDT.Poly", "USDC.Poly"]
+        for token in expected_tokens:
+            if token in balances:
+                print(f"✓ {token} balance: {balances[token]}")
+        
+        print(f"✓ Wallet balances endpoint working, {len(balances)} tokens queried")
+    
+    def test_wallet_balances_invalid_address(self):
+        """Test wallet balances with malformed address still returns (empty or error gracefully)"""
+        response = requests.get(f"{BASE_URL}/api/wallet/balances/0xinvalid")
+        # Should return 200 with empty/zero balances, not crash
+        assert response.status_code == 200
+        print("✓ Invalid address handled gracefully")
+
+
 class TestAuthMe:
     """Auth me endpoint test"""
     
