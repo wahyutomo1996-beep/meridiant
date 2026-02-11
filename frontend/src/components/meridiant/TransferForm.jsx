@@ -119,7 +119,7 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
     return (
       <Dialog open={open} onOpenChange={() => { setSearch(''); onClose(); }}>
         <DialogContent className="sm:max-w-sm border-gray-700/50 p-0" style={{ background: '#111827' }}>
-          <div className="p-5 pb-3"><h2 className="text-white text-lg font-semibold">Select currency</h2></div>
+          <DialogTitle className="p-5 pb-3 text-white text-lg font-semibold">Select currency</DialogTitle>
           <div className="pb-3 max-h-[300px] overflow-y-auto custom-scrollbar">
             {currencies.map(c => (
               <button key={c.code} onClick={() => handleSelect(c)}
