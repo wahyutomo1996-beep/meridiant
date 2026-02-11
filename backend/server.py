@@ -27,7 +27,10 @@ SECRET_KEY = os.environ.get('JWT_SECRET', 'meridiant-secret-key-2025-production'
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
-# Password hashing
+# Google OAuth Config
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+ALCHEMY_API_KEY = os.environ.get('ALCHEMY_API_KEY')
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 app = FastAPI()
