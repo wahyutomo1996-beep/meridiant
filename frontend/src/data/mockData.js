@@ -141,31 +141,51 @@ export const wallets = [
 ];
 
 // Transfer methods - grouped
+// Payment method logos
+export const paymentLogos = {
+  bca: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/f06e2fdcbb995c3a8babd0758b107c68f08b15862784f4e0ba408972f66f0a8f.png',
+  bni: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/ad27892fbf34cd1e3ac3645a7260e7d688a590f32c07c41d7e24a62776beb4f4.png',
+  mandiri: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/87bf2f707c9f7553d7d172bf0a98af12950923c2e5b1ed4ce86527a524bf01a2.png',
+  bri: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/1d2e71ec23a9319ac5e6c6698ec9c30caaa83ef510e40c62b1ac59067350b1d9.png',
+  cimb: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/2838bdf722a6a7658845351831f9f7aa0dd4d3ce3f89778b491830bf21ce6092.png',
+  permata: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/688270b9bf09ca12154736ea98d4333454bb51e9dd9e064a742bd1c798af3905.png',
+  gopay: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/c2c190c7dbdc635df2ef7414ffabec0428dc0ddad5ac24d5f491c1d060a9daa2.png',
+  ovo: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/c33fdfdba004aff5edd6c5534c330945e78b46c34d6bd6e62f73e9bd17c6c216.png',
+  dana: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/ab59e80d4dff726d9510e9f5b1ad5958ce6c5b294c12714417bd2c57a6b6fc11.png',
+  shopeepay: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/29f37bbc9d418453d0e4255cfd67b022c0de94da4cf27797b0f8dc6dd1e48a50.png',
+  linkaja: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/9af7c3a814b1b005869a60489ff6ca462ffe691caff7bdef75a033594bed70c2.png',
+  qris: 'https://static.prod-images.emergentagent.com/jobs/864659c7-a889-4d04-9f7b-12f745ce403e/images/3aa3a5fe80bcc4be0ea8a2ca25f6f47bb58ffa8a58b24192288cf79c7e84af7c.png',
+};
+
+// Minimum purchase amount in IDR
+export const MIN_AMOUNT_IDR = 10000;
+
 export const transferMethodGroups = [
   {
     category: 'Bank Transfer',
     items: [
-      { id: 'bca', name: 'BCA', desc: 'Bank Central Asia' },
-      { id: 'bni', name: 'BNI', desc: 'Bank Negara Indonesia' },
-      { id: 'mandiri', name: 'Mandiri', desc: 'Bank Mandiri' },
-      { id: 'bri', name: 'BRI', desc: 'Bank Rakyat Indonesia' },
-      { id: 'cimb', name: 'CIMB Niaga', desc: 'CIMB Niaga' },
+      { id: 'bca', name: 'BCA', desc: 'Bank Central Asia', logo: paymentLogos.bca, color: '#003399', fee: 0, eta: 'Instan' },
+      { id: 'bni', name: 'BNI', desc: 'Bank Negara Indonesia', logo: paymentLogos.bni, color: '#EC6117', fee: 0, eta: 'Instan' },
+      { id: 'mandiri', name: 'Mandiri', desc: 'Bank Mandiri', logo: paymentLogos.mandiri, color: '#003366', fee: 0, eta: 'Instan' },
+      { id: 'bri', name: 'BRI', desc: 'Bank Rakyat Indonesia', logo: paymentLogos.bri, color: '#00529C', fee: 0, eta: 'Instan' },
+      { id: 'cimb', name: 'CIMB Niaga', desc: 'CIMB Niaga', logo: paymentLogos.cimb, color: '#EC1C24', fee: 0, eta: '1-5 menit' },
+      { id: 'permata', name: 'Permata', desc: 'Bank Permata', logo: paymentLogos.permata, color: '#006B3F', fee: 0, eta: '1-5 menit' },
     ]
   },
   {
     category: 'E-Wallet',
     items: [
-      { id: 'gopay', name: 'GoPay', desc: 'Gojek Payment' },
-      { id: 'ovo', name: 'OVO', desc: 'OVO E-Wallet' },
-      { id: 'dana', name: 'DANA', desc: 'DANA E-Wallet' },
-      { id: 'shopeepay', name: 'ShopeePay', desc: 'Shopee Payment' },
-      { id: 'linkaja', name: 'LinkAja', desc: 'LinkAja Payment' },
+      { id: 'gopay', name: 'GoPay', desc: 'Gojek Payment', logo: paymentLogos.gopay, color: '#00AA13', fee: 0, eta: 'Instan' },
+      { id: 'ovo', name: 'OVO', desc: 'OVO E-Wallet', logo: paymentLogos.ovo, color: '#4C3494', fee: 0, eta: 'Instan' },
+      { id: 'dana', name: 'DANA', desc: 'DANA E-Wallet', logo: paymentLogos.dana, color: '#108EE9', fee: 0, eta: 'Instan' },
+      { id: 'shopeepay', name: 'ShopeePay', desc: 'Shopee Payment', logo: paymentLogos.shopeepay, color: '#EE4D2D', fee: 0, eta: 'Instan' },
+      { id: 'linkaja', name: 'LinkAja', desc: 'LinkAja Payment', logo: paymentLogos.linkaja, color: '#E31937', fee: 0, eta: 'Instan' },
     ]
   },
   {
     category: 'QRIS',
     items: [
-      { id: 'qris', name: 'QRIS', desc: 'Scan QR code to pay at any merchant' },
+      { id: 'qris', name: 'QRIS', desc: 'Scan QR untuk bayar', logo: paymentLogos.qris, color: '#000000', fee: 0, eta: 'Instan' },
     ]
   },
 ];
@@ -175,28 +195,28 @@ export const withdrawDestGroups = [
   {
     category: 'Bank',
     items: [
-      { id: 'bank_bca', name: 'Bank Central Asia (BCA)' },
-      { id: 'bank_bni', name: 'Bank Negara Indonesia (BNI)' },
-      { id: 'bank_mandiri', name: 'Bank Mandiri' },
-      { id: 'bank_bri', name: 'Bank Rakyat Indonesia (BRI)' },
-      { id: 'bank_cimb', name: 'CIMB Niaga' },
-      { id: 'bank_permata', name: 'Bank Permata' },
+      { id: 'bank_bca', name: 'BCA', desc: 'Bank Central Asia', logo: paymentLogos.bca, color: '#003399', fee: 2500, eta: '1-10 menit' },
+      { id: 'bank_bni', name: 'BNI', desc: 'Bank Negara Indonesia', logo: paymentLogos.bni, color: '#EC6117', fee: 2500, eta: '1-10 menit' },
+      { id: 'bank_mandiri', name: 'Mandiri', desc: 'Bank Mandiri', logo: paymentLogos.mandiri, color: '#003366', fee: 2500, eta: '1-10 menit' },
+      { id: 'bank_bri', name: 'BRI', desc: 'Bank Rakyat Indonesia', logo: paymentLogos.bri, color: '#00529C', fee: 2500, eta: '1-10 menit' },
+      { id: 'bank_cimb', name: 'CIMB Niaga', desc: 'CIMB Niaga', logo: paymentLogos.cimb, color: '#EC1C24', fee: 2500, eta: '5-30 menit' },
+      { id: 'bank_permata', name: 'Permata', desc: 'Bank Permata', logo: paymentLogos.permata, color: '#006B3F', fee: 2500, eta: '5-30 menit' },
     ]
   },
   {
     category: 'E-Wallet',
     items: [
-      { id: 'gopay', name: 'GoPay' },
-      { id: 'ovo', name: 'OVO' },
-      { id: 'dana', name: 'DANA' },
-      { id: 'shopeepay', name: 'ShopeePay' },
-      { id: 'linkaja', name: 'LinkAja' },
+      { id: 'gopay', name: 'GoPay', desc: 'Gojek Payment', logo: paymentLogos.gopay, color: '#00AA13', fee: 1000, eta: 'Instan' },
+      { id: 'ovo', name: 'OVO', desc: 'OVO E-Wallet', logo: paymentLogos.ovo, color: '#4C3494', fee: 1000, eta: 'Instan' },
+      { id: 'dana', name: 'DANA', desc: 'DANA E-Wallet', logo: paymentLogos.dana, color: '#108EE9', fee: 1000, eta: 'Instan' },
+      { id: 'shopeepay', name: 'ShopeePay', desc: 'Shopee Payment', logo: paymentLogos.shopeepay, color: '#EE4D2D', fee: 1000, eta: 'Instan' },
+      { id: 'linkaja', name: 'LinkAja', desc: 'LinkAja Payment', logo: paymentLogos.linkaja, color: '#E31937', fee: 1000, eta: 'Instan' },
     ]
   },
   {
     category: 'QRIS',
     items: [
-      { id: 'qris_withdraw', name: 'QRIS Withdrawal' },
+      { id: 'qris_withdraw', name: 'QRIS', desc: 'QRIS Withdrawal', logo: paymentLogos.qris, color: '#000000', fee: 0, eta: 'Instan' },
     ]
   },
 ];
