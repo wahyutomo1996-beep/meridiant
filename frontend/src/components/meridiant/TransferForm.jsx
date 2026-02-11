@@ -334,7 +334,7 @@ const SelectedMethodCard = ({ item, onClick, placeholder }) => {
         </div>
       )}
       <div className="flex-1 text-left">
-        <p className="text-white text-sm font-medium">{item.name}</p>
+        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{item.name}</p>
         <div className="flex items-center gap-2 text-[11px]">
           <span className={item.fee === 0 ? 'text-emerald-400' : 'text-gray-400'}>{item.fee === 0 ? 'Gratis' : `Rp ${item.fee?.toLocaleString()}`}</span>
           {item.eta && <span className="text-gray-500">{item.eta}</span>}
