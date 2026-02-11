@@ -1,6 +1,34 @@
 // QRIS payment image
 export const QRIS_IMAGE = 'https://customer-assets.emergentagent.com/job_chain-connect-6/artifacts/758bur2g_qris.png';
 
+// Mock wallet balances (for percentage withdraw feature)
+export const mockBalances = {
+  'IDRT': 5000000,
+  'ETH': 0.45,
+  'ETH.Base': 0.12,
+  'ETH.Arb': 0.08,
+  'ETH.OP': 0.05,
+  'BTC': 0.0025,
+  'WBTC': 0.001,
+  'USDT': 1250,
+  'USDT.BSC': 800,
+  'USDT.Arb': 350,
+  'USDT.Base': 500,
+  'USDT.Sol': 620,
+  'USDC': 980,
+  'USDC.Base': 420,
+  'USDC.Arb': 275,
+  'USDC.Sol': 310,
+  'BNB': 0.85,
+  'SOL': 3.2,
+  'MATIC': 450,
+  'AVAX': 2.5,
+  'ARB': 120,
+  'OP': 85,
+  'LINK': 15,
+  'UNI': 22,
+};
+
 // Fiat currencies - Indonesia market only
 export const fiatCurrencies = [
   { code: 'IDR', name: 'Indonesian Rupiah', symbol: 'Rp', flagColors: ['#FF0000', '#FFFFFF'] },
