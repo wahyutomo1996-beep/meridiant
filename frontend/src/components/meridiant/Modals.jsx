@@ -133,11 +133,13 @@ export const WalletConnectModal = ({ open, onClose, onConnect }) => {
                 {/* Wallet icon */}
                 <div className="relative flex-shrink-0">
                   <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105"
+                    className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 overflow-hidden"
                     style={{ background: w.bgColor || (w.color + '20') }}
                   >
                     {isConn ? (
                       <Loader2 className="w-5 h-5 text-emerald-400 animate-spin" />
+                    ) : w.logo ? (
+                      <img src={w.logo} alt={w.name} className="w-7 h-7 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
                     ) : (
                       cfg?.Icon && <cfg.Icon className="w-5 h-5" style={{ color: cfg.color }} />
                     )}
