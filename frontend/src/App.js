@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import "@/App.css";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, useLocation, useNavigate } from "react-router-dom";
 import Background from "@/components/meridiant/Background";
 import Navbar from "@/components/meridiant/Navbar";
 import TransferForm from "@/components/meridiant/TransferForm";
@@ -13,9 +13,50 @@ import {
   CompleteModal,
 } from "@/components/meridiant/Modals";
 import { MyProfilePage, WalletAccountPage, WithdrawalAccountPage, HistoryTransactionsPage } from "@/components/meridiant/ProfilePages";
-import { authAPI, walletAPI, transactionAPI } from "@/lib/api";
+import { authAPI, walletAPI, transactionAPI, pricesAPI } from "@/lib/api";
+import { exchangeRates as fallbackRates } from "@/data/mockData";
 
-function App() {
+// REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+function AuthCallback({ onAuthSuccess }) {
+  const hasProcessed = useRef(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (hasProcessed.current) return;
+    hasProcessed.current = true;
+
+    const hash = window.location.hash;
+    const match = hash.match(/session_id=([^&]+)/);
+    if (!match) { navigate('/', { replace: true }); return; }
+
+    const sessionId = match[1];
+    (async () => {
+      try {
+        const res = await authAPI.googleSession(sessionId);
+        const { token, user } = res.data;
+        localStorage.setItem('meridiant_token', token);
+        onAuthSuccess(user);
+      } catch (e) {
+        console.error('Google auth failed:', e);
+      }
+      // Clear hash and redirect
+      window.history.replaceState(null, '', window.location.pathname);
+      navigate('/', { replace: true });
+    })();
+  }, [navigate, onAuthSuccess]);
+
+  return (
+    <div className="fixed inset-0 bg-[#0a0f1a] flex items-center justify-center z-50">
+      <div className="text-center">
+        <div className="w-12 h-12 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin mx-auto mb-4" />
+        <p className="text-white text-sm">Signing in with Google...</p>
+      </div>
+    </div>
+  );
+}
+
+function AppContent() {
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [walletConnected, setWalletConnected] = useState(false);
@@ -24,7 +65,46 @@ function App() {
   const [activeModal, setActiveModal] = useState(null);
   const [transactionData, setTransactionData] = useState(null);
   const [currentPage, setCurrentPage] = useState("home");
+  const [liveRates, setLiveRates] = useState(fallbackRates);
 
+  const handleAuthSuccess = useCallback((u) => {
+    setUser({ name: u.name, email: u.email, picture: u.picture });
+    setIsLoggedIn(true);
+    if (u.wallet_connected) {
+      setWalletConnected(true);
+      setWalletAddress(u.wallet_address || "");
+      setConnectedWallet({ name: u.wallet_name || "Wallet" });
+    }
+  }, []);
+
+  // Check for Google Auth session_id in URL hash
+  if (location.hash?.includes('session_id=')) {
+    return <AuthCallback onAuthSuccess={handleAuthSuccess} />;
+  }
+
+  return (
+    <AppInner
+      isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}
+      user={user} setUser={setUser}
+      walletConnected={walletConnected} setWalletConnected={setWalletConnected}
+      connectedWallet={connectedWallet} setConnectedWallet={setConnectedWallet}
+      walletAddress={walletAddress} setWalletAddress={setWalletAddress}
+      activeModal={activeModal} setActiveModal={setActiveModal}
+      transactionData={transactionData} setTransactionData={setTransactionData}
+      currentPage={currentPage} setCurrentPage={setCurrentPage}
+      liveRates={liveRates} setLiveRates={setLiveRates}
+      handleAuthSuccess={handleAuthSuccess}
+    />
+  );
+}
+
+function AppInner({
+  isLoggedIn, setIsLoggedIn, user, setUser,
+  walletConnected, setWalletConnected, connectedWallet, setConnectedWallet,
+  walletAddress, setWalletAddress, activeModal, setActiveModal,
+  transactionData, setTransactionData, currentPage, setCurrentPage,
+  liveRates, setLiveRates, handleAuthSuccess,
+}) {
   // Restore session on mount
   const restoreSession = useCallback(async () => {
     const token = localStorage.getItem("meridiant_token");
@@ -32,32 +112,35 @@ function App() {
     try {
       const res = await authAPI.getMe();
       const u = res.data;
-      setUser({ name: u.name, email: u.email });
-      setIsLoggedIn(true);
-      if (u.wallet_connected) {
-        setWalletConnected(true);
-        setWalletAddress(u.wallet_address || "");
-        setConnectedWallet({ name: u.wallet_name || "Wallet" });
-      }
+      handleAuthSuccess(u);
     } catch {
       localStorage.removeItem("meridiant_token");
     }
-  }, []);
+  }, [handleAuthSuccess]);
 
   useEffect(() => { restoreSession(); }, [restoreSession]);
+
+  // Fetch live prices
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const res = await pricesAPI.get();
+        if (res.data?.rates && Object.keys(res.data.rates).length > 0) {
+          setLiveRates(res.data.rates);
+        }
+      } catch { /* keep fallback */ }
+    };
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 30000);
+    return () => clearInterval(interval);
+  }, [setLiveRates]);
 
   const handleSignIn = async (email, password) => {
     try {
       const res = await authAPI.signin(email, password);
       const { token, user: u } = res.data;
       localStorage.setItem("meridiant_token", token);
-      setUser({ name: u.name, email: u.email });
-      setIsLoggedIn(true);
-      if (u.wallet_connected) {
-        setWalletConnected(true);
-        setWalletAddress(u.wallet_address || "");
-        setConnectedWallet({ name: u.wallet_name || "Wallet" });
-      }
+      handleAuthSuccess(u);
       setActiveModal(null);
     } catch (err) {
       throw new Error(err.response?.data?.detail || "Sign in failed");
@@ -69,8 +152,7 @@ function App() {
       const res = await authAPI.signup(name, email, password);
       const { token, user: u } = res.data;
       localStorage.setItem("meridiant_token", token);
-      setUser({ name: u.name, email: u.email });
-      setIsLoggedIn(true);
+      handleAuthSuccess(u);
       setActiveModal(null);
     } catch (err) {
       throw new Error(err.response?.data?.detail || "Sign up failed");
@@ -87,16 +169,15 @@ function App() {
   };
 
   const handleConnectWallet = async (wallet, address) => {
-    const addr = address || '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
     try {
-      const res = await walletAPI.connect(wallet.id, wallet.name);
+      const res = await walletAPI.connect(wallet.id, wallet.name, address);
       setConnectedWallet({ ...wallet, name: res.data.wallet_name });
-      setWalletAddress(addr);
+      setWalletAddress(address || res.data.wallet_address);
       setWalletConnected(true);
       setActiveModal(null);
     } catch {
       setConnectedWallet(wallet);
-      setWalletAddress(addr);
+      setWalletAddress(address);
       setWalletConnected(true);
       setActiveModal(null);
     }
@@ -117,7 +198,7 @@ function App() {
     setActiveModal("checkout");
   };
 
-  const handleConfirmTransaction = async () => {
+  const handleConfirmTransaction = async (onChainResult) => {
     setActiveModal("processing");
     try {
       if (transactionData) {
@@ -128,10 +209,12 @@ function App() {
           to_currency: transactionData.to.currency.displayCode || transactionData.to.currency.code,
           to_amount: transactionData.to.amount,
           method_or_dest: transactionData.method?.name || transactionData.destination?.name || null,
+          tx_hash: onChainResult?.txHash || null,
+          chain: onChainResult?.chain || null,
         });
       }
-    } catch { /* ignore for now */ }
-    setTimeout(() => setActiveModal("complete"), 3000);
+    } catch { /* ignore */ }
+    setTimeout(() => setActiveModal("complete"), onChainResult ? 500 : 3000);
   };
 
   const handleTransactionComplete = () => {
@@ -140,94 +223,78 @@ function App() {
   };
 
   return (
+    <>
+      <Background />
+      <div className="relative z-10 min-h-screen flex flex-col">
+        <Navbar
+          isLoggedIn={isLoggedIn} user={user}
+          walletConnected={walletConnected} connectedWallet={connectedWallet}
+          walletAddress={walletAddress}
+          onConnectWallet={() => setActiveModal("wallet")}
+          onDisconnectWallet={handleDisconnectWallet}
+          onSignIn={() => setActiveModal("signin")}
+          onSignUp={() => setActiveModal("signup")}
+          onSignOut={handleSignOut}
+          onNavigate={setCurrentPage}
+        />
+        <main className={`flex-1 flex ${currentPage === 'home' ? 'items-center justify-center' : 'items-start pt-6'} px-4 pb-20`}>
+          {currentPage === 'home' && (
+            <TransferForm
+              isLoggedIn={isLoggedIn}
+              walletConnected={walletConnected}
+              walletAddress={walletAddress}
+              connectedWallet={connectedWallet}
+              liveRates={liveRates}
+              onTransfer={handleTransfer}
+            />
+          )}
+          {currentPage === 'profile' && (
+            <MyProfilePage user={user} onBack={() => setCurrentPage('home')} onUpdate={(u) => setUser(prev => ({ ...prev, ...u }))} />
+          )}
+          {currentPage === 'wallet-account' && (
+            <WalletAccountPage
+              walletConnected={walletConnected} connectedWallet={connectedWallet} walletAddress={walletAddress}
+              onConnectWallet={() => setActiveModal("wallet")} onDisconnectWallet={handleDisconnectWallet}
+              onBack={() => setCurrentPage('home')}
+            />
+          )}
+          {currentPage === 'withdrawal-account' && <WithdrawalAccountPage onBack={() => setCurrentPage('home')} />}
+          {currentPage === 'history' && <HistoryTransactionsPage onBack={() => setCurrentPage('home')} />}
+        </main>
+        <footer className="px-6 lg:px-10 py-4 flex flex-wrap items-center justify-between gap-4 text-gray-500 text-xs border-t border-gray-800/30">
+          <div className="flex items-center gap-4">
+            <span className="hover:text-gray-300 cursor-pointer transition-colors">Blog</span>
+            <span className="hover:text-gray-300 cursor-pointer transition-colors">FAQ</span>
+            <span className="hover:text-gray-300 cursor-pointer transition-colors">Support</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hover:text-gray-300 cursor-pointer transition-colors">Privacy Policy</span>
+            <span className="text-gray-700">|</span>
+            <span className="hover:text-gray-300 cursor-pointer transition-colors">Terms and Information</span>
+          </div>
+          <span>&copy; 2025 Meridiant. All rights reserved.</span>
+        </footer>
+      </div>
+
+      <WalletConnectModal open={activeModal === "wallet"} onClose={() => setActiveModal(null)} onConnect={handleConnectWallet} />
+      <SignInModal open={activeModal === "signin"} onClose={() => setActiveModal(null)} onSignIn={handleSignIn} onSwitchToSignUp={() => setActiveModal("signup")} />
+      <SignUpModal open={activeModal === "signup"} onClose={() => setActiveModal(null)} onSignUp={handleSignUp} onSwitchToSignIn={() => setActiveModal("signin")} />
+      <CheckoutModal
+        open={activeModal === "checkout"} onClose={() => setActiveModal(null)}
+        data={transactionData} onConfirm={handleConfirmTransaction}
+        walletAddress={walletAddress} connectedWallet={connectedWallet}
+      />
+      <ProcessingModal open={activeModal === "processing"} />
+      <CompleteModal open={activeModal === "complete"} onClose={handleTransactionComplete} data={transactionData} />
+    </>
+  );
+}
+
+function App() {
+  return (
     <div className="App dark">
       <BrowserRouter>
-        <Background />
-        <div className="relative z-10 min-h-screen flex flex-col">
-          <Navbar
-            isLoggedIn={isLoggedIn}
-            user={user}
-            walletConnected={walletConnected}
-            connectedWallet={connectedWallet}
-            walletAddress={walletAddress}
-            onConnectWallet={() => setActiveModal("wallet")}
-            onDisconnectWallet={handleDisconnectWallet}
-            onSignIn={() => setActiveModal("signin")}
-            onSignUp={() => setActiveModal("signup")}
-            onSignOut={handleSignOut}
-            onNavigate={setCurrentPage}
-          />
-
-          <main className={`flex-1 flex ${currentPage === 'home' ? 'items-center justify-center' : 'items-start pt-6'} px-4 pb-20`}>
-            {currentPage === 'home' && (
-              <TransferForm
-                isLoggedIn={isLoggedIn}
-                walletConnected={walletConnected}
-                onTransfer={handleTransfer}
-              />
-            )}
-            {currentPage === 'profile' && (
-              <MyProfilePage user={user} onBack={() => setCurrentPage('home')} onUpdate={(u) => setUser(prev => ({ ...prev, ...u }))} />
-            )}
-            {currentPage === 'wallet-account' && (
-              <WalletAccountPage
-                walletConnected={walletConnected} connectedWallet={connectedWallet} walletAddress={walletAddress}
-                onConnectWallet={() => setActiveModal("wallet")} onDisconnectWallet={handleDisconnectWallet}
-                onBack={() => setCurrentPage('home')}
-              />
-            )}
-            {currentPage === 'withdrawal-account' && (
-              <WithdrawalAccountPage onBack={() => setCurrentPage('home')} />
-            )}
-            {currentPage === 'history' && (
-              <HistoryTransactionsPage onBack={() => setCurrentPage('home')} />
-            )}
-          </main>
-
-          <footer className="px-6 lg:px-10 py-4 flex flex-wrap items-center justify-between gap-4 text-gray-500 text-xs border-t border-gray-800/30">
-            <div className="flex items-center gap-4">
-              <span className="hover:text-gray-300 cursor-pointer transition-colors">Blog</span>
-              <span className="hover:text-gray-300 cursor-pointer transition-colors">FAQ</span>
-              <span className="hover:text-gray-300 cursor-pointer transition-colors">Support</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="hover:text-gray-300 cursor-pointer transition-colors">Privacy Policy</span>
-              <span className="text-gray-700">|</span>
-              <span className="hover:text-gray-300 cursor-pointer transition-colors">Terms and Information</span>
-            </div>
-            <span>&copy; 2025 Meridiant. All rights reserved.</span>
-          </footer>
-        </div>
-
-        <WalletConnectModal
-          open={activeModal === "wallet"}
-          onClose={() => setActiveModal(null)}
-          onConnect={handleConnectWallet}
-        />
-        <SignInModal
-          open={activeModal === "signin"}
-          onClose={() => setActiveModal(null)}
-          onSignIn={handleSignIn}
-          onSwitchToSignUp={() => setActiveModal("signup")}
-        />
-        <SignUpModal
-          open={activeModal === "signup"}
-          onClose={() => setActiveModal(null)}
-          onSignUp={handleSignUp}
-          onSwitchToSignIn={() => setActiveModal("signin")}
-        />
-        <CheckoutModal
-          open={activeModal === "checkout"}
-          onClose={() => setActiveModal(null)}
-          data={transactionData}
-          onConfirm={handleConfirmTransaction}
-        />
-        <ProcessingModal open={activeModal === "processing"} />
-        <CompleteModal
-          open={activeModal === "complete"}
-          onClose={handleTransactionComplete}
-          data={transactionData}
-        />
+        <AppContent />
       </BrowserRouter>
     </div>
   );
