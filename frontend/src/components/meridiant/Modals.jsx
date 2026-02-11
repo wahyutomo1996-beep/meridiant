@@ -346,6 +346,14 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm }) => {
           <div className="rounded-xl p-4" style={{ background: '#0c1120' }}>
             <h4 className="text-gray-400 text-sm font-medium mb-2">How to pay</h4>
             <p className="text-white text-sm">{data.method?.name || data.destination?.name || 'Bank Transfer'}</p>
+            {(data.method?.id === 'qris' || data.destination?.id === 'qris_withdraw') && (
+              <div className="mt-4 flex flex-col items-center">
+                <div className="bg-white rounded-xl p-3 mb-3">
+                  <img src={QRIS_IMAGE} alt="QRIS Payment" className="w-52 h-52 object-contain" />
+                </div>
+                <p className="text-gray-400 text-xs text-center">Scan QR code above using your banking or e-wallet app</p>
+              </div>
+            )}
           </div>
           <button onClick={onConfirm} className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors">Confirm and pay</button>
         </div>
