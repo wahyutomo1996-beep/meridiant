@@ -1,57 +1,80 @@
 # Meridiant - Crypto On-Chain/Off-Chain Platform
 
 ## Original Problem Statement
-Build a crypto on-chain/off-chain platform named "Meridiant" for Indonesian market. Features include Transfer (on-chain crypto-to-crypto) and Withdraw (off-chain crypto-to-fiat) with wallet connectivity, real-time prices, and Google OAuth. Model bisnis: OTC/Centralized.
+Build a crypto on-chain/off-chain platform named "Meridiant" for Indonesian market. OTC/Centralized model. Features include Transfer (on-chain), Withdraw (off-chain), wallet connectivity, real-time prices, Google OAuth, AI chatbot, admin dashboard, and Telegram notifications.
 
 ## Tech Stack
-- Frontend: React.js (CRA + craco), ethers.js, @solana/web3.js, Space Grotesk font
-- Backend: FastAPI (Python) with httpx for CoinGecko API
-- Database: MongoDB (Motor async driver)
-- UI: Tailwind CSS + Shadcn/UI
-- Auth: Direct Google OAuth 2.0 (@react-oauth/google)
+- Frontend: React.js (CRA + craco), ethers.js, @solana/web3.js, Tailwind CSS + Shadcn/UI
+- Backend: FastAPI (Python), Motor (MongoDB async), emergentintegrations (LLM)
+- Database: MongoDB
+- Auth: Google OAuth 2.0 + Email/Password JWT
 - RPC: Alchemy (BSC, Polygon, Solana)
 - Prices: CoinGecko API with fallback
+- AI: OpenAI GPT-4.1-mini via Emergent LLM key
 - Deployment: Docker + Nginx + Let's Encrypt SSL
 
 ## What's Implemented
 
 ### Core Features
-- Email/password Sign In & Sign Up with JWT tokens
+- Email/password Sign In & Sign Up with JWT
 - Direct Google OAuth via @react-oauth/google
 - Real-time CoinGecko price feeds (66 rate pairs)
 - On-chain transactions (BSC, Polygon, Solana)
 - Real wallet balances via Alchemy RPC
-- Real deposit address: 0xdf32c54583b4d83939b93aa2ca23487d4eb853da
-
-### UI/UX (Optimized)
-- Hero section: "Transfer Crypto Instan & Aman" with gradient text
-- Supported chain pills (BNB Chain, Polygon, Solana, Ethereum, Avalanche)
-- Feature badges (Instan, Aman, Multi-Chain)
-- Mobile-first responsive design with hamburger menu
-- Micro-animations (fade-up, scale-in, glass cards, button press)
-- FAQ page in Indonesian (8 items, expandable)
 - Smart number formatting (thousand separators, no trailing zeros)
-- Token selector fullscreen on mobile
-- Profile pages with responsive layout
+
+### AI Chatbot (NEW)
+- Floating widget at bottom-right corner
+- OpenAI GPT-4.1-mini via Emergent LLM key
+- System prompt in Indonesian about Meridiant platform
+- Chat history stored in MongoDB (chat_sessions collection)
+- Session continuity across messages
+
+### Admin Dashboard (NEW)
+- Protected by admin email check (admin@meridiant.com)
+- Overview tab: Stats cards, transaction status, volume by token
+- Transactions tab: Searchable list with user info, status, explorer links
+- Users tab: Searchable list with auth type, wallet status, tx count
+- Settings tab: Telegram bot configuration
+
+### Telegram Notifications (NEW)
+- Config form in admin Settings tab
+- Bot token + Chat ID setup with connection test
+- Auto-sends notification on every new transaction
+- HTML formatted messages with transaction details
+
+### UI/UX
+- Hero section: "Transfer Crypto Instan & Aman" (chain pills removed)
+- Mobile-first responsive with hamburger menu
+- Micro-animations (fade-up, scale-in, glass cards)
+- FAQ page (8 items in Indonesian)
 
 ### Deployment Files
-- Docker multi-stage builds (backend + frontend)
-- docker-compose.yml (MongoDB + Backend + Frontend + Nginx)
-- Nginx reverse proxy with SSL (Let's Encrypt)
-- Automated deploy.sh script for VPS
-- DEPLOYMENT.md guide
+- Docker multi-stage builds, docker-compose.yml, Nginx SSL, deploy.sh
+
+## API Endpoints
+- POST /api/auth/signup, POST /api/auth/signin, GET /api/auth/me
+- POST /api/auth/google
+- GET /api/prices
+- POST /api/wallet/connect, DELETE /api/wallet/disconnect
+- GET /api/wallet/balances/{address}
+- POST /api/transactions, GET /api/transactions
+- PUT /api/profile
+- POST /api/bank-accounts, GET /api/bank-accounts, DELETE /api/bank-accounts/:id
+- POST /api/chat (AI chatbot)
+- GET /api/admin/stats, GET /api/admin/transactions, GET /api/admin/users
+- POST /api/admin/telegram-config, GET /api/admin/telegram-config
+
+## Credentials
+- Admin: admin@meridiant.com / Admin1234!
+- Test user: test@meridiant.com / Test1234!
 
 ## Testing Status
-- iteration_1.json: 100% passed
-- iteration_2.json: 100% passed  
-- iteration_3.json: 100% passed (25/25 backend, all frontend)
-- iteration_4.json: 100% passed (19/19 UI/UX + 3/3 backend)
+- iteration_1-4: 100% passed (previous features)
+- iteration_5: 100% passed (16/16 backend, all frontend - chatbot, admin, telegram)
 
 ## Upcoming Tasks
-- P0: Deploy ke VPS (menunggu user)
-- P1: Admin Dashboard (monitor transaksi OTC)
-- P1: Notifikasi transaksi (Email/Telegram)
+- P0: Deploy ke VPS
 - P2: SPL token transfers Solana (USDT, USDC)
 - P2: Rate limit & security hardening
-- P3: Multi-language (ID/EN toggle)
-- P3: Referral system, KYC integration
+- P3: Multi-language (ID/EN), Referral system, KYC
