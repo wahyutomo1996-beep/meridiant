@@ -19,14 +19,6 @@ import { Shield, Zap, Globe, ChevronDown, ChevronUp } from "lucide-react";
 
 // ========== HERO SECTION ==========
 const HeroSection = ({ onGetStarted }) => {
-  const chains = [
-    { name: 'BNB Chain', color: '#F0B90B' },
-    { name: 'Polygon', color: '#8247E5' },
-    { name: 'Solana', color: '#9945FF' },
-    { name: 'Ethereum', color: '#627EEA' },
-    { name: 'Avalanche', color: '#E84142' },
-  ];
-
   return (
     <div className="text-center mb-8 md:mb-10 max-w-xl mx-auto px-4">
       <h1 className="anim-fade-up text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight tracking-tight mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
@@ -36,15 +28,7 @@ const HeroSection = ({ onGetStarted }) => {
       <p className="anim-fade-up-d1 text-gray-400 text-sm sm:text-base mb-6 max-w-md mx-auto leading-relaxed">
         Kirim dan terima aset digital di berbagai blockchain. Cepat, transparan, dan tanpa ribet.
       </p>
-      <div className="anim-fade-up-d2 flex items-center justify-center gap-2 flex-wrap mb-6">
-        {chains.map((c) => (
-          <span key={c.name} className="chain-pill flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-gray-300 border border-gray-700/40" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c.color }} />
-            {c.name}
-          </span>
-        ))}
-      </div>
-      <div className="anim-fade-up-d3 flex items-center justify-center gap-6 text-gray-500 text-xs">
+      <div className="anim-fade-up-d2 flex items-center justify-center gap-6 text-gray-500 text-xs">
         <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-emerald-400" /> Instan</span>
         <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-emerald-400" /> Aman</span>
         <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-emerald-400" /> Multi-Chain</span>
