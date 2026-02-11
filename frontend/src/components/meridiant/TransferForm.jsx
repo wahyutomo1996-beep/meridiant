@@ -55,6 +55,37 @@ const CryptoIcon = ({ token, size = 20 }) => {
 
 const categoryIcons = { 'Bank Transfer': Building2, 'Bank': Building2, 'E-Wallet': Smartphone, 'QRIS': QrCode };
 
+// Smart number formatter - clean output without trailing zeros
+const formatAmount = (value, isFiat = false) => {
+  if (!value || isNaN(value)) return '0';
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num) || num === 0) return '0';
+
+  if (isFiat) {
+    return Math.round(num).toLocaleString('id-ID');
+  }
+
+  const abs = Math.abs(num);
+  let maxDecimals;
+  if (Number.isInteger(num)) maxDecimals = 0;
+  else if (abs >= 1000) maxDecimals = 2;
+  else if (abs >= 1) maxDecimals = 4;
+  else if (abs >= 0.0001) maxDecimals = 6;
+  else maxDecimals = 8;
+
+  return num.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: maxDecimals,
+  });
+};
+
+const formatDisplayInput = (value) => {
+  if (!value || isNaN(parseFloat(value))) return '';
+  const num = parseFloat(value);
+  if (Number.isInteger(num) && num >= 1000) return num.toLocaleString('en-US');
+  return value;
+};
+
 // ========== TOKEN SELECTOR MODAL ==========
 const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, type }) => {
   const [search, setSearch] = useState('');
