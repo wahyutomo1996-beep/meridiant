@@ -62,7 +62,7 @@ const ChainBadge = ({ chain }) => {
   return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>{s.label}</span>;
 };
 
-const ChainBadge = ({ chain }) => {
+// ========== WALLET CONNECT MODAL ==========
 export const WalletConnectModal = ({ open, onClose, onConnect }) => {
   const [connecting, setConnecting] = useState(null);
   const [search, setSearch] = useState('');
