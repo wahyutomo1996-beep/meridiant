@@ -126,6 +126,7 @@ export const chainLogos = {
   'Polygon': 'https://assets.coingecko.com/coins/images/4713/small/polygon.png',
   'Avalanche': 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png',
   'Bitcoin': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+  'TON': 'https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png',
 };
 
 // Wallets with chain support
@@ -159,6 +160,11 @@ export const paymentLogos = {
 
 // Minimum purchase amount in IDR
 export const MIN_AMOUNT_IDR = 10000;
+
+// Fee structure
+export const TRADE_FEE_RATE = 0.003; // 0.3%
+export const PLATFORM_FEE_RATE = 0.002; // 0.2%
+export const PLATFORM_FEE_THRESHOLD = 50000; // Rp 50,000
 
 export const transferMethodGroups = [
   {
