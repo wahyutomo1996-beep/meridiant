@@ -466,6 +466,12 @@ async def create_transaction(data: TransactionCreate, user=Depends(get_current_u
             raise HTTPException(status_code=400, detail="Invalid amount")
 
     tx_id = "MRD-" + uuid.uuid4().hex[:8].upper()
+    # Calculate fees
+    amt = float(data.from_amount) if data.from_amount else 0
+    trade_fee = round(amt * TRADE_FEE_RATE) if data.type == 'transfer' and data.from_currency == 'IDR' else 0
+    platform_fee = round(amt * PLATFORM_FEE_RATE) if (data.type == 'transfer' and data.from_currency == 'IDR' and amt >= PLATFORM_FEE_THRESHOLD) else 0
+    total_fee = trade_fee + platform_fee
+
     tx_doc = {
         "_id": tx_id,
         "user_id": user["_id"],
@@ -477,6 +483,9 @@ async def create_transaction(data: TransactionCreate, user=Depends(get_current_u
         "method_or_dest": data.method_or_dest,
         "tx_hash": data.tx_hash,
         "chain": data.chain,
+        "trade_fee": trade_fee,
+        "platform_fee": platform_fee,
+        "total_fee": total_fee,
         "status": "completed" if data.tx_hash else "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
