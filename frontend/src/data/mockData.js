@@ -36,6 +36,8 @@ export const mockBalances = {
   'OP': 85,
   'LINK': 15,
   'UNI': 22,
+  'TON': 15,
+  'USDT.TON': 500,
 };
 
 // Fiat currencies - Indonesia market only
