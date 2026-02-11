@@ -270,7 +270,7 @@ const GroupedPicker = ({ groups, selected, onSelect, placeholder }) => {
 };
 
 // ========== MAIN TRANSFER FORM ==========
-const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWallet, liveRates, onTransfer }) => {
+const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWallet, liveRates, realBalances, onTransfer }) => {
   const [activeTab, setActiveTab] = useState('transfer');
   const [fromCurrency, setFromCurrency] = useState(fiatCurrencies[0]);
   const [toCurrency, setToCurrency] = useState(cryptoCurrencies[0]);
