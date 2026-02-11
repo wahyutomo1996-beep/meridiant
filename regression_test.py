@@ -16,7 +16,7 @@ import sys
 from typing import Dict, Any
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://token-swap-go.preview.emergentagent.com/api"
+BACKEND_URL = "https://payment-ui-verify.preview.emergentagent.com/api"
 
 class RegressionTester:
     def __init__(self):
