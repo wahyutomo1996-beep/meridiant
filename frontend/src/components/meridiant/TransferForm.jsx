@@ -556,7 +556,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
         {/* Simple estimate when no amount */}
         {(!fromAmount || parseFloat(fromAmount) <= 0) && (
-          <div className="mb-4 rounded-xl px-3 sm:px-4 py-3" style={{ background: '#0c1120' }}>
+          <div className="mb-4 rounded-xl px-3 sm:px-4 py-3" style={{ background: 'var(--card-inner)' }}>
             <p className="text-gray-400 text-xs sm:text-sm">
               You'll receive an estimate of <span className="text-emerald-400 font-medium">0 {toCurrency.displayCode || toCurrency.code}</span> for <span className="text-emerald-400 font-medium">0 {fromCurrency.displayCode || fromCurrency.code}</span>
             </p>
