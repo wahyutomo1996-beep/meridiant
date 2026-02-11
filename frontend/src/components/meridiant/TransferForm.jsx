@@ -522,15 +522,21 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
         {/* Fee estimation */}
         {fromAmount && parseFloat(fromAmount) > 0 && (
-          <div className="mb-4 rounded-xl px-3 sm:px-4 py-3 space-y-2" style={{ background: '#0c1120' }} data-testid="fee-estimation">
+          <div className="mb-4 rounded-xl px-3 sm:px-4 py-3 space-y-2" style={{ background: 'var(--card-inner)' }} data-testid="fee-estimation">
             <div className="flex items-center justify-between">
               <span className="text-gray-500 text-xs">Estimasi yang diterima</span>
               <span className="text-emerald-400 text-xs sm:text-sm font-medium truncate ml-2">{toAmount || '0'} {toCurrency.displayCode || toCurrency.code}</span>
             </div>
-            {activeTab === 'transfer' && (
+            {activeTab === 'transfer' && tradeFee > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-gray-500 text-xs">Fee jaringan (estimasi)</span>
-                <span className="text-gray-400 text-xs">~Rp {networkFee.toLocaleString()}</span>
+                <span className="text-gray-500 text-xs">Trade fee (0.3%)</span>
+                <span className="text-gray-400 text-xs">Rp {tradeFee.toLocaleString()}</span>
+              </div>
+            )}
+            {activeTab === 'transfer' && platformFee > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 text-xs">Platform fee (0.2%)</span>
+                <span className="text-gray-400 text-xs">Rp {platformFee.toLocaleString()}</span>
               </div>
             )}
             {methodFee > 0 && (
