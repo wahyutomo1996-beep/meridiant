@@ -331,15 +331,14 @@ function AppContent() {
           {currentPage === 'faq' && <FAQPage onBack={() => setCurrentPage('home')} />}
           {currentPage === 'admin' && <AdminDashboard onBack={() => setCurrentPage('home')} />}
         </main>
-        <footer className="px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-gray-500 text-xs border-t border-gray-800/30">
-          <div className="flex items-center gap-4">
+        <footer className="px-3 sm:px-6 lg:px-10 py-4 flex flex-col items-center gap-2 sm:gap-3 text-gray-500 text-[10px] sm:text-xs border-t border-gray-800/30">
+          <div className="flex items-center gap-3 sm:gap-4">
             <span className="hover:text-gray-300 cursor-pointer transition-colors" onClick={() => setCurrentPage('faq')}>FAQ</span>
             <span className="hover:text-gray-300 cursor-pointer transition-colors">Support</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="hover:text-gray-300 cursor-pointer transition-colors">Privacy Policy</span>
-            <span className="text-gray-700">|</span>
-            <span className="hover:text-gray-300 cursor-pointer transition-colors">Terms and Information</span>
+            <span className="text-gray-700 hidden sm:inline">|</span>
+            <span className="hover:text-gray-300 cursor-pointer transition-colors hidden sm:inline">Privacy Policy</span>
+            <span className="text-gray-700 hidden sm:inline">|</span>
+            <span className="hover:text-gray-300 cursor-pointer transition-colors hidden sm:inline">Terms and Information</span>
           </div>
           <span>&copy; 2025 Meridiant. All rights reserved.</span>
         </footer>
