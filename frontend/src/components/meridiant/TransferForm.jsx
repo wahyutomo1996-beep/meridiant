@@ -550,7 +550,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
             )}
             <div className="border-t border-gray-700/30 pt-2 flex items-center justify-between">
               <span className="text-gray-400 text-xs font-medium">Total biaya</span>
-              <span className={`text-xs font-medium ${totalFee === 0 ? 'text-emerald-400' : 'text-white'}`}>
+              <span className={`text-xs font-medium ${totalFee === 0 ? 'text-emerald-400' : ''}`} style={totalFee > 0 ? { color: 'var(--text-primary)' } : {}}>
                 {totalFee === 0 ? 'Gratis' : `~Rp ${totalFee.toLocaleString()}`}
               </span>
             </div>
