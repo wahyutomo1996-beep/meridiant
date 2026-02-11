@@ -23,14 +23,14 @@ import AdminDashboard from "@/components/meridiant/AdminDashboard";
 const HeroSection = ({ onGetStarted }) => {
   return (
     <div className="text-center mb-6 sm:mb-8 md:mb-10 max-w-xl mx-auto px-3 sm:px-4">
-      <h1 className="anim-fade-up text-2xl sm:text-3xl lg:text-5xl font-bold text-white leading-tight tracking-tight mb-3 sm:mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+      <h1 className="anim-fade-up text-2xl sm:text-3xl lg:text-5xl font-bold leading-tight tracking-tight mb-3 sm:mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif", color: 'var(--text-primary)' }}>
         Transfer Crypto<br />
         <span className="gradient-text">Instan & Aman</span>
       </h1>
-      <p className="anim-fade-up-d1 text-gray-400 text-xs sm:text-sm md:text-base mb-4 sm:mb-6 max-w-md mx-auto leading-relaxed">
+      <p className="anim-fade-up-d1 text-xs sm:text-sm md:text-base mb-4 sm:mb-6 max-w-md mx-auto leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         Kirim dan terima aset digital di berbagai blockchain. Cepat, transparan, dan tanpa ribet.
       </p>
-      <div className="anim-fade-up-d2 flex items-center justify-center gap-4 sm:gap-6 text-gray-500 text-[10px] sm:text-xs">
+      <div className="anim-fade-up-d2 flex items-center justify-center gap-4 sm:gap-6 text-[10px] sm:text-xs" style={{ color: 'var(--text-muted)' }}>
         <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" /> Instan</span>
         <span className="flex items-center gap-1.5"><Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" /> Aman</span>
         <span className="flex items-center gap-1.5"><Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" /> Multi-Chain</span>
