@@ -156,6 +156,8 @@ export const exchangeRates = {
   IDR_USDT: 0.0000609,
   'IDR_USDT.BSC': 0.0000609,
   'IDR_USDT.Arb': 0.0000609,
+  'IDR_USDT.Base': 0.0000609,
+  'IDR_USDT.Sol': 0.0000609,
   IDR_USDC: 0.0000609,
   'IDR_USDC.Base': 0.0000609,
   'IDR_USDC.Arb': 0.0000609,
