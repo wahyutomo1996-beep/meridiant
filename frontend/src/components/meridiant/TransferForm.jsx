@@ -419,9 +419,12 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
   // Fee estimation
   const currentSelection = activeTab === 'transfer' ? selectedMethod : selectedDest;
-  const networkFee = activeTab === 'transfer' ? 5000 : 0; // gas fee estimate for on-chain
+  const amt = parseFloat(fromAmount) || 0;
+  const idrAmount = activeTab === 'transfer' ? amt : 0; // only apply trade/platform fee on transfer (IDR → crypto)
+  const tradeFee = activeTab === 'transfer' ? Math.round(amt * TRADE_FEE_RATE) : 0;
+  const platformFee = (activeTab === 'transfer' && amt >= PLATFORM_FEE_THRESHOLD) ? Math.round(amt * PLATFORM_FEE_RATE) : 0;
   const methodFee = currentSelection?.fee || 0;
-  const totalFee = networkFee + methodFee;
+  const totalFee = tradeFee + platformFee + methodFee;
 
   const CurrencyBtn = ({ currency, type, onClick }) => (
     <button onClick={onClick} className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full hover:bg-gray-600/30 transition-colors flex-shrink-0" style={{ background: 'rgba(75,85,99,0.3)' }}>
