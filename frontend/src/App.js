@@ -329,6 +329,7 @@ function AppContent() {
           {currentPage === 'withdrawal-account' && <div className="w-full page-enter"><WithdrawalAccountPage onBack={() => setCurrentPage('home')} /></div>}
           {currentPage === 'history' && <div className="w-full page-enter"><HistoryTransactionsPage onBack={() => setCurrentPage('home')} /></div>}
           {currentPage === 'faq' && <FAQPage onBack={() => setCurrentPage('home')} />}
+          {currentPage === 'admin' && <AdminDashboard onBack={() => setCurrentPage('home')} />}
         </main>
         <footer className="px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-gray-500 text-xs border-t border-gray-800/30">
           <div className="flex items-center gap-4">
