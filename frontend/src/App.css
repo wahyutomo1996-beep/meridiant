@@ -212,3 +212,20 @@ input {
   max-width: 100%;
   box-sizing: border-box;
 }
+
+/* Light mode: hide space elements, adjust shadows */
+[data-theme="light"] .star-twinkle { display: none; }
+[data-theme="light"] .shooting-star { display: none; }
+[data-theme="light"] .orbital-ring { display: none; }
+[data-theme="light"] .nebula-cloud { opacity: 0.3; }
+[data-theme="light"] .anim-pulse-glow {
+  animation: pulse-glow-light 3s ease-in-out infinite;
+}
+[data-theme="light"] .glass-card {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+@keyframes pulse-glow-light {
+  0%, 100% { box-shadow: 0 4px 24px rgba(16, 185, 129, 0.08); }
+  50% { box-shadow: 0 4px 32px rgba(16, 185, 129, 0.14); }
+}
