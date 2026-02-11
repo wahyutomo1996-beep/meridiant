@@ -355,6 +355,8 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
   const [quoteTimer, setQuoteTimer] = useState(10);
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
+  const [showMethodPicker, setShowMethodPicker] = useState(false);
+  const [amountError, setAmountError] = useState('');
 
   useEffect(() => {
     const t = setInterval(() => setQuoteTimer(p => p <= 0 ? 10 : p - 1), 1000);
@@ -362,7 +364,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
   }, []);
 
   useEffect(() => {
-    if (!fromAmount || isNaN(parseFloat(fromAmount))) { setToAmount(''); return; }
+    if (!fromAmount || isNaN(parseFloat(fromAmount))) { setToAmount(''); setAmountError(''); return; }
     const fromKey = fromCurrency.displayCode || fromCurrency.code;
     const toKey = toCurrency.displayCode || toCurrency.code;
     const rates = liveRates || exchangeRates;
@@ -372,16 +374,32 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
       const isFiatOutput = activeTab === 'withdraw';
       setToAmount(formatAmount(result, isFiatOutput));
     } else { setToAmount('0'); }
+
+    // Validate minimum amount
+    const amt = parseFloat(fromAmount);
+    if (activeTab === 'transfer' && fromCurrency.code === 'IDR' && amt > 0 && amt < MIN_AMOUNT_IDR) {
+      setAmountError(`Minimum pembelian Rp ${MIN_AMOUNT_IDR.toLocaleString()}`);
+    } else {
+      setAmountError('');
+    }
   }, [fromAmount, fromCurrency, toCurrency, activeTab, liveRates]);
 
   const handleTabSwitch = (tab) => {
     setActiveTab(tab); setFromAmount(''); setToAmount('');
-    setSelectedMethod(null); setSelectedDest(null);
+    setSelectedMethod(null); setSelectedDest(null); setAmountError('');
     if (tab === 'transfer') { setFromCurrency(fiatCurrencies[0]); setToCurrency(cryptoCurrencies[0]); }
     else { setFromCurrency(cryptoCurrencies[0]); setToCurrency(fiatCurrencies[0]); }
   };
 
   const handleSubmit = () => {
+    // Validate minimum
+    if (activeTab === 'transfer' && fromCurrency.code === 'IDR') {
+      const amt = parseFloat(fromAmount);
+      if (!amt || amt < MIN_AMOUNT_IDR) {
+        setAmountError(`Minimum pembelian Rp ${MIN_AMOUNT_IDR.toLocaleString()}`);
+        return;
+      }
+    }
     onTransfer({
       type: activeTab,
       from: { currency: fromCurrency, amount: fromAmount },
@@ -396,6 +414,12 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
   const toList = activeTab === 'transfer' ? cryptoCurrencies : fiatCurrencies;
 
   const btnText = !isLoggedIn ? 'Sign in to continue' : !walletConnected ? 'Connect wallet' : (activeTab === 'transfer' ? 'Transfer now' : 'Withdraw now');
+
+  // Fee estimation
+  const currentSelection = activeTab === 'transfer' ? selectedMethod : selectedDest;
+  const networkFee = activeTab === 'transfer' ? 5000 : 0; // gas fee estimate for on-chain
+  const methodFee = currentSelection?.fee || 0;
+  const totalFee = networkFee + methodFee;
 
   const CurrencyBtn = ({ currency, type, onClick }) => (
     <button onClick={onClick} className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-600/30 transition-colors flex-shrink-0" style={{ background: 'rgba(75,85,99,0.3)' }}>
@@ -422,12 +446,21 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
         </div>
 
         <div className="mb-4">
-          <label className="text-gray-400 text-sm mb-2 block">Transfer</label>
-          <div className="flex items-center gap-2 rounded-xl px-3 py-3" style={{ background: '#0c1120' }}>
+          <label className="text-gray-400 text-sm mb-2 block">{activeTab === 'transfer' ? 'Transfer' : 'From'}</label>
+          <div className={`flex items-center gap-2 rounded-xl px-3 py-3 border ${amountError ? 'border-red-500/40' : 'border-transparent'}`} style={{ background: '#0c1120' }}>
             <CurrencyBtn currency={fromCurrency} type={fromType} onClick={() => setShowFromPicker(true)} />
             <input type="number" placeholder="0" value={fromAmount} onChange={e => setFromAmount(e.target.value)}
               className="flex-1 bg-transparent text-white text-right text-base outline-none placeholder:text-gray-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           </div>
+          {amountError && (
+            <div className="flex items-center gap-1.5 mt-1.5 px-1" data-testid="amount-error">
+              <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+              <span className="text-red-400 text-xs">{amountError}</span>
+            </div>
+          )}
+          {activeTab === 'transfer' && !amountError && (
+            <p className="text-gray-600 text-[11px] mt-1.5 px-1">Min. Rp {MIN_AMOUNT_IDR.toLocaleString()}</p>
+          )}
           {activeTab === 'withdraw' && (() => {
             const balKey = fromCurrency.displayCode || fromCurrency.code;
             const realBal = realBalances?.[balKey];
@@ -471,30 +504,71 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
         {activeTab === 'transfer' ? (
           <div className="mb-4">
             <label className="text-gray-400 text-sm mb-2 block">Transfer method</label>
-            <GroupedPicker groups={transferMethodGroups} selected={selectedMethod} onSelect={setSelectedMethod} placeholder="Choose transfer method" />
+            <SelectedMethodCard item={selectedMethod} onClick={() => setShowMethodPicker(true)} placeholder="Pilih metode transfer" />
           </div>
         ) : (
           <div className="mb-4">
             <label className="text-gray-400 text-sm mb-2 block">Withdraw destination</label>
-            <GroupedPicker groups={withdrawDestGroups} selected={selectedDest} onSelect={setSelectedDest} placeholder="Choose withdraw destination" />
+            <SelectedMethodCard item={selectedDest} onClick={() => setShowMethodPicker(true)} placeholder="Pilih tujuan withdraw" />
           </div>
         )}
 
-        <div className="mb-4 rounded-xl px-4 py-3" style={{ background: '#0c1120' }}>
-          <p className="text-gray-400 text-sm">
-            You'll receive an estimate of <span className="text-emerald-400 font-medium">{toAmount || '0'} {toCurrency.displayCode || toCurrency.code}</span> for <span className="text-emerald-400 font-medium">{formatDisplayInput(fromAmount) || '0'} {fromCurrency.displayCode || fromCurrency.code}</span>
-          </p>
-        </div>
+        {/* Fee estimation */}
+        {fromAmount && parseFloat(fromAmount) > 0 && (
+          <div className="mb-4 rounded-xl px-4 py-3 space-y-2" style={{ background: '#0c1120' }} data-testid="fee-estimation">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-500 text-xs">Estimasi yang diterima</span>
+              <span className="text-emerald-400 text-sm font-medium">{toAmount || '0'} {toCurrency.displayCode || toCurrency.code}</span>
+            </div>
+            {activeTab === 'transfer' && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 text-xs">Fee jaringan (estimasi)</span>
+                <span className="text-gray-400 text-xs">~Rp {networkFee.toLocaleString()}</span>
+              </div>
+            )}
+            {methodFee > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 text-xs">Biaya {currentSelection?.name}</span>
+                <span className="text-gray-400 text-xs">Rp {methodFee.toLocaleString()}</span>
+              </div>
+            )}
+            <div className="border-t border-gray-700/30 pt-2 flex items-center justify-between">
+              <span className="text-gray-400 text-xs font-medium">Total biaya</span>
+              <span className={`text-xs font-medium ${totalFee === 0 ? 'text-emerald-400' : 'text-white'}`}>
+                {totalFee === 0 ? 'Gratis' : `~Rp ${totalFee.toLocaleString()}`}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Simple estimate when no amount */}
+        {(!fromAmount || parseFloat(fromAmount) <= 0) && (
+          <div className="mb-4 rounded-xl px-4 py-3" style={{ background: '#0c1120' }}>
+            <p className="text-gray-400 text-sm">
+              You'll receive an estimate of <span className="text-emerald-400 font-medium">0 {toCurrency.displayCode || toCurrency.code}</span> for <span className="text-emerald-400 font-medium">0 {fromCurrency.displayCode || fromCurrency.code}</span>
+            </p>
+          </div>
+        )}
 
         <p className="text-center text-gray-500 text-sm mb-5">Quote updates in {quoteTimer}s</p>
 
-        <button onClick={handleSubmit} data-testid="transfer-submit-btn" className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-all active:scale-[0.98] shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 btn-press">
+        <button onClick={handleSubmit} data-testid="transfer-submit-btn"
+          disabled={!!amountError}
+          className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:hover:bg-emerald-500 text-white font-medium text-sm transition-all active:scale-[0.98] shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 btn-press">
           {btnText}
         </button>
       </div>
 
       <TokenSelectorModal open={showFromPicker} onClose={() => setShowFromPicker(false)} currencies={fromList} selected={fromCurrency} onSelect={setFromCurrency} type={fromType} />
       <TokenSelectorModal open={showToPicker} onClose={() => setShowToPicker(false)} currencies={toList} selected={toCurrency} onSelect={setToCurrency} type={toType} />
+      <MethodPickerModal
+        open={showMethodPicker}
+        onClose={() => setShowMethodPicker(false)}
+        groups={activeTab === 'transfer' ? transferMethodGroups : withdrawDestGroups}
+        selected={activeTab === 'transfer' ? selectedMethod : selectedDest}
+        onSelect={activeTab === 'transfer' ? setSelectedMethod : setSelectedDest}
+        title={activeTab === 'transfer' ? 'Pilih Metode Transfer' : 'Pilih Tujuan Withdraw'}
+      />
     </div>
   );
 };
