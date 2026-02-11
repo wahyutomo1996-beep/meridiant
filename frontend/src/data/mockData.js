@@ -1,39 +1,80 @@
+// QRIS payment image
+export const QRIS_IMAGE = 'https://customer-assets.emergentagent.com/job_chain-connect-6/artifacts/758bur2g_qris.png';
+
 // Fiat currencies - Indonesia market only
 export const fiatCurrencies = [
   { code: 'IDR', name: 'Indonesian Rupiah', symbol: 'Rp', flagColors: ['#FF0000', '#FFFFFF'] },
 ];
 
-// Crypto currencies with chain info - popular pairs
+// Crypto currencies with real logos from CoinGecko CDN
 export const cryptoCurrencies = [
-  { code: 'IDRT', name: 'Rupiah Token', color: '#2ECC71', chain: 'Ethereum' },
-  { code: 'ETH', name: 'Ethereum', color: '#627EEA', chain: 'Ethereum' },
-  { code: 'ETH', name: 'Ethereum (Base)', color: '#0052FF', chain: 'Base', displayCode: 'ETH.Base' },
-  { code: 'ETH', name: 'Ethereum (Arbitrum)', color: '#28A0F0', chain: 'Arbitrum', displayCode: 'ETH.Arb' },
-  { code: 'ETH', name: 'Ethereum (Optimism)', color: '#FF0420', chain: 'Optimism', displayCode: 'ETH.OP' },
-  { code: 'BTC', name: 'Bitcoin', color: '#F7931A', chain: 'Bitcoin' },
-  { code: 'WBTC', name: 'Wrapped BTC', color: '#F09242', chain: 'Ethereum' },
-  { code: 'USDT', name: 'Tether', color: '#26A17B', chain: 'Ethereum' },
-  { code: 'USDT', name: 'Tether (BSC)', color: '#26A17B', chain: 'BSC', displayCode: 'USDT.BSC' },
-  { code: 'USDT', name: 'Tether (Arbitrum)', color: '#26A17B', chain: 'Arbitrum', displayCode: 'USDT.Arb' },
-  { code: 'USDC', name: 'USD Coin', color: '#2775CA', chain: 'Ethereum' },
-  { code: 'USDC', name: 'USD Coin (Base)', color: '#2775CA', chain: 'Base', displayCode: 'USDC.Base' },
-  { code: 'USDC', name: 'USD Coin (Arbitrum)', color: '#2775CA', chain: 'Arbitrum', displayCode: 'USDC.Arb' },
-  { code: 'BNB', name: 'BNB', color: '#F0B90B', chain: 'BSC' },
-  { code: 'SOL', name: 'Solana', color: '#9945FF', chain: 'Solana' },
-  { code: 'MATIC', name: 'Polygon', color: '#8247E5', chain: 'Polygon' },
-  { code: 'AVAX', name: 'Avalanche', color: '#E84142', chain: 'Avalanche' },
-  { code: 'ARB', name: 'Arbitrum', color: '#28A0F0', chain: 'Arbitrum' },
-  { code: 'OP', name: 'Optimism', color: '#FF0420', chain: 'Optimism' },
-  { code: 'LINK', name: 'Chainlink', color: '#2A5ADA', chain: 'Ethereum' },
-  { code: 'UNI', name: 'Uniswap', color: '#FF007A', chain: 'Ethereum' },
+  { code: 'IDRT', name: 'Rupiah Token', color: '#2ECC71', chain: 'Ethereum',
+    logo: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5765.png' },
+  { code: 'ETH', name: 'Ethereum', color: '#627EEA', chain: 'Ethereum',
+    logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png' },
+  { code: 'ETH', name: 'Ethereum (Base)', color: '#0052FF', chain: 'Base', displayCode: 'ETH.Base',
+    logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png' },
+  { code: 'ETH', name: 'Ethereum (Arbitrum)', color: '#28A0F0', chain: 'Arbitrum', displayCode: 'ETH.Arb',
+    logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png' },
+  { code: 'ETH', name: 'Ethereum (Optimism)', color: '#FF0420', chain: 'Optimism', displayCode: 'ETH.OP',
+    logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png' },
+  { code: 'BTC', name: 'Bitcoin', color: '#F7931A', chain: 'Bitcoin',
+    logo: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png' },
+  { code: 'WBTC', name: 'Wrapped BTC', color: '#F09242', chain: 'Ethereum',
+    logo: 'https://assets.coingecko.com/coins/images/7598/small/wrapped_bitcoin_wbtc.png' },
+  { code: 'USDT', name: 'Tether', color: '#26A17B', chain: 'Ethereum',
+    logo: 'https://assets.coingecko.com/coins/images/325/small/Tether.png' },
+  { code: 'USDT', name: 'Tether (BSC)', color: '#26A17B', chain: 'BSC', displayCode: 'USDT.BSC',
+    logo: 'https://assets.coingecko.com/coins/images/325/small/Tether.png' },
+  { code: 'USDT', name: 'Tether (Arbitrum)', color: '#26A17B', chain: 'Arbitrum', displayCode: 'USDT.Arb',
+    logo: 'https://assets.coingecko.com/coins/images/325/small/Tether.png' },
+  { code: 'USDC', name: 'USD Coin', color: '#2775CA', chain: 'Ethereum',
+    logo: 'https://assets.coingecko.com/coins/images/6319/small/usdc.png' },
+  { code: 'USDC', name: 'USD Coin (Base)', color: '#2775CA', chain: 'Base', displayCode: 'USDC.Base',
+    logo: 'https://assets.coingecko.com/coins/images/6319/small/usdc.png' },
+  { code: 'USDC', name: 'USD Coin (Arbitrum)', color: '#2775CA', chain: 'Arbitrum', displayCode: 'USDC.Arb',
+    logo: 'https://assets.coingecko.com/coins/images/6319/small/usdc.png' },
+  { code: 'BNB', name: 'BNB', color: '#F0B90B', chain: 'BSC',
+    logo: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png' },
+  { code: 'SOL', name: 'Solana', color: '#9945FF', chain: 'Solana',
+    logo: 'https://assets.coingecko.com/coins/images/4128/small/solana.png' },
+  { code: 'MATIC', name: 'Polygon', color: '#8247E5', chain: 'Polygon',
+    logo: 'https://assets.coingecko.com/coins/images/4713/small/polygon.png' },
+  { code: 'AVAX', name: 'Avalanche', color: '#E84142', chain: 'Avalanche',
+    logo: 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png' },
+  { code: 'ARB', name: 'Arbitrum', color: '#28A0F0', chain: 'Arbitrum',
+    logo: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg' },
+  { code: 'OP', name: 'Optimism', color: '#FF0420', chain: 'Optimism',
+    logo: 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png' },
+  { code: 'LINK', name: 'Chainlink', color: '#2A5ADA', chain: 'Ethereum',
+    logo: 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png' },
+  { code: 'UNI', name: 'Uniswap', color: '#FF007A', chain: 'Ethereum',
+    logo: 'https://assets.coingecko.com/coins/images/12504/small/uniswap-logo.png' },
 ];
+
+// Chain logos
+export const chainLogos = {
+  'Ethereum': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+  'Base': 'https://assets.coingecko.com/asset_platforms/images/131/small/base.jpeg',
+  'Arbitrum': 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg',
+  'Optimism': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
+  'BSC': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
+  'Solana': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+  'Polygon': 'https://assets.coingecko.com/coins/images/4713/small/polygon.png',
+  'Avalanche': 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png',
+  'Bitcoin': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+};
 
 // Wallets with chain support
 export const wallets = [
-  { id: 'metamask', name: 'MetaMask', color: '#E2761B', bgColor: '#1a1a1a', chains: ['EVM'] },
-  { id: 'okx', name: 'OKX Wallet', color: '#FFFFFF', bgColor: '#000000', chains: ['EVM', 'SOL'] },
-  { id: 'phantom', name: 'Phantom', color: '#AB9FF2', bgColor: '#1C1136', chains: ['EVM', 'SOL'] },
-  { id: 'solflare', name: 'Solflare', color: '#FC7227', bgColor: '#1A0F00', chains: ['SOL'] },
+  { id: 'metamask', name: 'MetaMask', color: '#E2761B', bgColor: '#1a1a1a', chains: ['EVM'],
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg' },
+  { id: 'okx', name: 'OKX Wallet', color: '#FFFFFF', bgColor: '#000000', chains: ['EVM', 'SOL'],
+    logo: 'https://static.okx.com/cdn/assets/imgs/247/58E63B32A170B219.png' },
+  { id: 'phantom', name: 'Phantom', color: '#AB9FF2', bgColor: '#1C1136', chains: ['EVM', 'SOL'],
+    logo: 'https://assets.coingecko.com/markets/images/1472/small/phantom.png' },
+  { id: 'solflare', name: 'Solflare', color: '#FC7227', bgColor: '#1A0F00', chains: ['SOL'],
+    logo: 'https://assets.coingecko.com/markets/images/1370/small/solflare.png' },
 ];
 
 // Transfer methods - grouped
