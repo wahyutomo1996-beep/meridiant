@@ -32,6 +32,8 @@ if (config.enableHealthCheck) {
   healthPluginInstance = new WebpackHealthPlugin();
 }
 
+const webpack = require("webpack");
+
 const webpackConfig = {
   eslint: {
     configure: {
@@ -47,9 +49,23 @@ const webpackConfig = {
       '@': path.resolve(__dirname, 'src'),
     },
     configure: (webpackConfig) => {
+      // Polyfills for Solana web3.js
+      webpackConfig.resolve.fallback = {
+        ...webpackConfig.resolve.fallback,
+        crypto: require.resolve('crypto-browserify'),
+        stream: require.resolve('stream-browserify'),
+        buffer: require.resolve('buffer'),
+        http: false,
+        https: false,
+        zlib: false,
+      };
+      webpackConfig.plugins.push(
+        new webpack.ProvidePlugin({
+          Buffer: ['buffer', 'Buffer'],
+        })
+      );
 
-      // Add ignored patterns to reduce watched directories
-        webpackConfig.watchOptions = {
+      webpackConfig.watchOptions = {
           ...webpackConfig.watchOptions,
           ignored: [
             '**/node_modules/**',
@@ -61,7 +77,6 @@ const webpackConfig = {
         ],
       };
 
-      // Add health check plugin to webpack if enabled
       if (config.enableHealthCheck && healthPluginInstance) {
         webpackConfig.plugins.push(healthPluginInstance);
       }
