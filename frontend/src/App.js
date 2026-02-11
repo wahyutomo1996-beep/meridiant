@@ -130,6 +130,18 @@ function AppContent() {
   const [liveRates, setLiveRates] = useState(fallbackRates);
   const [realBalances, setRealBalances] = useState(null);
 
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('mrd-theme', next);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
   const handleAuthSuccess = useCallback((u) => {
     setUser({ name: u.name, email: u.email, picture: u.picture });
     setIsLoggedIn(true);
