@@ -87,8 +87,62 @@ const formatDisplayInput = (value) => {
   return value;
 };
 
+// Helper to get balance for a token
+const getTokenBalance = (token, realBalances, mockBal) => {
+  const key = token.displayCode || token.code;
+  if (realBalances && realBalances[key] !== undefined && realBalances[key] !== null) {
+    return { amount: parseFloat(realBalances[key]), isLive: true };
+  }
+  if (mockBal && mockBal[key] !== undefined) {
+    return { amount: mockBal[key], isLive: false };
+  }
+  return { amount: 0, isLive: false };
+};
+
+// Token row component used in both "My Assets" and full list
+const TokenRow = ({ c, isSelected, balance, liveRates, onSelect, showChain = true }) => {
+  const key = c.displayCode || c.code;
+  const idrRate = liveRates?.[`${key}_IDR`] || 0;
+  const idrValue = balance.amount * idrRate;
+
+  return (
+    <button onClick={() => onSelect(c)}
+      data-testid={`token-row-${key}`}
+      className={`flex items-center gap-3.5 w-full px-5 py-3 hover:bg-white/5 transition-colors ${isSelected ? 'bg-emerald-500/8' : ''}`}>
+      <div className="relative flex-shrink-0">
+        <CryptoIcon token={c} size={36} />
+        {c.chain && chainLogos[c.chain] && (
+          <img src={chainLogos[c.chain]} alt="" className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#111827]" />
+        )}
+      </div>
+      <div className="text-left flex-1 min-w-0">
+        <p className="text-white text-sm font-semibold">{c.name.split('(')[0].trim()}</p>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400 text-xs">{key}</span>
+          {showChain && c.chain && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700/60 text-gray-400">{c.chain}</span>
+          )}
+        </div>
+      </div>
+      {balance.amount > 0 ? (
+        <div className="text-right flex-shrink-0">
+          <p className="text-white text-sm font-medium">{formatAmount(balance.amount)}</p>
+          {idrValue > 0 && (
+            <p className="text-gray-500 text-[11px]">
+              {balance.isLive && <span className="text-emerald-500 mr-1">LIVE</span>}
+              Rp {formatAmount(idrValue, true)}
+            </p>
+          )}
+        </div>
+      ) : showChain && c.chain ? null : (
+        <span className="text-gray-600 text-xs flex-shrink-0">0</span>
+      )}
+    </button>
+  );
+};
+
 // ========== TOKEN SELECTOR MODAL ==========
-const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, type }) => {
+const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, type, balances, walletConnected, liveRates }) => {
   const [search, setSearch] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState('all');
   const [showNetworks, setShowNetworks] = useState(false);
@@ -97,6 +151,23 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
     currencies.filter(c => popularTokenCodes.includes(c.code) && !c.displayCode),
     [currencies]
   );
+
+  // Tokens with balance > 0 (my assets)
+  const myAssets = useMemo(() => {
+    if (!walletConnected) return [];
+    return currencies.filter(c => {
+      const bal = getTokenBalance(c, balances?.real, balances?.mock);
+      return bal.amount > 0;
+    }).sort((a, b) => {
+      const balA = getTokenBalance(a, balances?.real, balances?.mock);
+      const balB = getTokenBalance(b, balances?.real, balances?.mock);
+      const keyA = a.displayCode || a.code;
+      const keyB = b.displayCode || b.code;
+      const idrA = balA.amount * (liveRates?.[`${keyA}_IDR`] || 0);
+      const idrB = balB.amount * (liveRates?.[`${keyB}_IDR`] || 0);
+      return idrB - idrA;
+    });
+  }, [currencies, balances, walletConnected, liveRates]);
 
   const filtered = useMemo(() => {
     let list = currencies;
@@ -110,8 +181,25 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
         (c.displayCode || '').toLowerCase().includes(q)
       );
     }
+    // Sort: tokens with balance first
+    if (walletConnected && balances) {
+      list = [...list].sort((a, b) => {
+        const balA = getTokenBalance(a, balances.real, balances.mock);
+        const balB = getTokenBalance(b, balances.real, balances.mock);
+        if (balA.amount > 0 && balB.amount <= 0) return -1;
+        if (balA.amount <= 0 && balB.amount > 0) return 1;
+        if (balA.amount > 0 && balB.amount > 0) {
+          const keyA = a.displayCode || a.code;
+          const keyB = b.displayCode || b.code;
+          const idrA = balA.amount * (liveRates?.[`${keyA}_IDR`] || 0);
+          const idrB = balB.amount * (liveRates?.[`${keyB}_IDR`] || 0);
+          return idrB - idrA;
+        }
+        return 0;
+      });
+    }
     return list;
-  }, [currencies, selectedNetwork, search]);
+  }, [currencies, selectedNetwork, search, walletConnected, balances, liveRates]);
 
   const handleSelect = (c) => { onSelect(c); onClose(); setSearch(''); setSelectedNetwork('all'); };
   const currentNet = networks.find(n => n.id === selectedNetwork);
@@ -177,7 +265,31 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
           </div>
         </div>
 
-        {popularTokens.length > 0 && selectedNetwork === 'all' && !search && (
+        {/* My Assets section - shown when wallet connected and has assets */}
+        {walletConnected && myAssets.length > 0 && selectedNetwork === 'all' && !search && (
+          <div className="flex-shrink-0" data-testid="my-assets-section">
+            <div className="px-5 py-2 flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Aset Saya</span>
+              <span className="text-gray-500 font-normal normal-case">({myAssets.length})</span>
+            </div>
+            <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
+              {myAssets.map((c, i) => {
+                const key = c.displayCode || c.code;
+                const isSelected = (selected.displayCode || selected.code) === key;
+                const balance = getTokenBalance(c, balances?.real, balances?.mock);
+                return (
+                  <TokenRow key={`asset-${key}-${i}`} c={c} isSelected={isSelected} balance={balance}
+                    liveRates={liveRates} onSelect={handleSelect} />
+                );
+              })}
+            </div>
+            <div className="mx-5 border-t border-gray-700/30 my-1" />
+          </div>
+        )}
+
+        {/* Popular tokens pills - only when no wallet or no search */}
+        {popularTokens.length > 0 && selectedNetwork === 'all' && !search && !(walletConnected && myAssets.length > 0) && (
           <div className="px-5 pb-3 flex gap-2 flex-wrap flex-shrink-0">
             {popularTokens.map((t, i) => {
               const isActive = (selected.displayCode || selected.code) === (t.displayCode || t.code);
@@ -194,7 +306,7 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
 
         <div className="px-5 py-2 flex items-center gap-2 text-gray-500 text-xs font-medium flex-shrink-0">
           <TrendingUp className="w-3.5 h-3.5" />
-          <span>Tokens by 24H volume</span>
+          <span>{walletConnected ? 'Semua token' : 'Tokens by 24H volume'}</span>
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar pb-3 min-h-0">
@@ -204,27 +316,10 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
             filtered.map((c, i) => {
               const key = c.displayCode || c.code;
               const isSelected = (selected.displayCode || selected.code) === key;
-              const mockAddr = c.chain && c.chain !== 'Bitcoin' ? `0x${c.code.replace(/[^a-zA-Z]/g, '').slice(0, 4)}...${Math.random().toString(16).slice(2, 6)}` : null;
+              const balance = walletConnected ? getTokenBalance(c, balances?.real, balances?.mock) : { amount: 0, isLive: false };
               return (
-                <button key={key + i} onClick={() => handleSelect(c)}
-                  className={`flex items-center gap-3.5 w-full px-5 py-3 hover:bg-white/5 transition-colors ${isSelected ? 'bg-emerald-500/8' : ''}`}>
-                  <div className="relative flex-shrink-0">
-                    <CryptoIcon token={c} size={36} />
-                    {c.chain && chainLogos[c.chain] && (
-                      <img src={chainLogos[c.chain]} alt="" className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#111827]" />
-                    )}
-                  </div>
-                  <div className="text-left flex-1 min-w-0">
-                    <p className="text-white text-sm font-semibold">{c.name.split('(')[0].trim()}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-xs">{c.displayCode || c.code}</span>
-                      {mockAddr && <span className="text-gray-600 text-[11px] truncate">{mockAddr}</span>}
-                    </div>
-                  </div>
-                  {c.chain && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-700/60 text-gray-400 flex-shrink-0">{c.chain}</span>
-                  )}
-                </button>
+                <TokenRow key={`list-${key}-${i}`} c={c} isSelected={isSelected} balance={balance}
+                  liveRates={liveRates} onSelect={handleSelect} />
               );
             })
           )}
