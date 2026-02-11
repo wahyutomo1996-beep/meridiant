@@ -221,17 +221,14 @@ export const SignInModal = ({ open, onClose, onSignIn, onGoogleCredential, onSwi
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-700/50" /></div>
           <div className="relative flex justify-center text-xs"><span className="px-3 text-gray-500" style={{ background: '#1a2235' }}>OR</span></div>
         </div>
-        <button onClick={handleGoogleAuth} data-testid="google-signin"
-          className="w-full py-3 rounded-xl border border-gray-600/50 text-white font-medium text-sm transition-colors hover:bg-white/5 flex items-center justify-center gap-3">
-          <GoogleIcon /> Continue with Google
-        </button>
+        <GoogleSignInButton onCredential={onGoogleCredential} />
       </DialogContent>
     </Dialog>
   );
 };
 
 // ========== SIGN UP MODAL ==========
-export const SignUpModal = ({ open, onClose, onSignUp, onSwitchToSignIn }) => {
+export const SignUpModal = ({ open, onClose, onSignUp, onGoogleCredential, onSwitchToSignIn }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
