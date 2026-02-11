@@ -1,55 +1,76 @@
 # Meridiant - Crypto On-Chain/Off-Chain Platform
 
 ## Original Problem Statement
-Build a crypto on-chain/off-chain platform named "Meridiant" for Indonesian market. Features include Transfer (on-chain crypto-to-crypto) and Withdraw (off-chain crypto-to-fiat) with wallet connectivity and user profiles.
+Build a crypto on-chain/off-chain platform named "Meridiant" for Indonesian market. Features include Transfer (on-chain crypto-to-crypto) and Withdraw (off-chain crypto-to-fiat) with wallet connectivity, real-time prices, and Google OAuth.
 
 ## Tech Stack
-- Frontend: React.js (CRA + craco)
-- Backend: Node.js/Express → FastAPI (Python)
-- Database: MongoDB
+- Frontend: React.js (CRA + craco), ethers.js, @solana/web3.js
+- Backend: FastAPI (Python) with httpx for CoinGecko API
+- Database: MongoDB (Motor async driver)
 - UI: Tailwind CSS + Shadcn/UI
 
-## Core Requirements
-- Authentication (Sign Up/Sign In with email/password, mocked Google Sign-In)
-- Dual-tab form: Transfer (On-Chain) / Withdraw (Off-Chain)
-- Token selector modal with search, network filters, real logos
-- Wallet connectivity (MetaMask, OKX, Phantom, Solflare)
-- User profile pages (My Profile, Wallet Account, Withdrawal Account, History)
-- Payment methods: Bank Transfer, E-Wallet, QRIS
+## What's Implemented
 
-## What's Implemented (Complete)
-- Full authentication flow (Sign In, Sign Up, Sign Out)
-- Transfer/Withdraw form with clean number formatting
-- Advanced token selector with network filters and real CoinGecko logos
-- IDRT on Ethereum, BSC (contract: 0x66207e39bb77e6b99aab56795c7c340c08520d83), Polygon (contract: 0x554cd6bdD03214b10AafA3e0D4D42De0C5D2937b)
+### Authentication
+- Email/password Sign In & Sign Up with JWT tokens
+- Google OAuth via Emergent Auth (real, not mocked)
+- Session restoration on page load
+- Test account: test@meridiant.com / Test1234!
+
+### Real-time Price Feeds
+- CoinGecko API integration with 60+ rate pairs
+- 60-second cache with automatic fallback to hardcoded rates
+- Supports all tokens: ETH, BTC, USDT, USDC, BNB, SOL, MATIC, AVAX, ARB, OP, LINK, UNI, WBTC
+- Chain-specific rates (ETH.Base, USDT.BSC, USDC.Poly, etc.)
+
+### On-Chain Transactions (BSC + Solana)
+- ERC-20 token transfers on BSC (IDRT, USDT, USDC)
+- ERC-20 token transfers on Polygon (IDRT, USDT, USDC)
+- Native transfers (BNB, MATIC, SOL)
+- Solana SOL transfers via Phantom wallet
+- Automatic chain switching in MetaMask
+- Transaction hash recording in database
+- Block explorer links
+
+### Token Support
+- IDRT on Ethereum, BSC (0x6620...0d83), Polygon (0x554c...937b)
 - USDT on Ethereum, BSC, Arbitrum, Base, Solana, Polygon, Optimism, Avalanche
 - USDC on Ethereum, Base, Arbitrum, Solana, BSC, Polygon, Optimism, Avalanche
 - ETH on Ethereum, Base, Arbitrum, Optimism
+- BTC, WBTC, BNB, SOL, MATIC, AVAX, ARB, OP, LINK, UNI
+
+### UI Features
 - Smart number formatting (no trailing zeros, thousand separators)
+- Token selector with search, network filters, real CoinGecko logos
 - Percentage buttons (25%, 50%, 75%, 100%) on Withdraw tab
-- Real wallet detection (MetaMask, OKX, Phantom, Solflare)
-- Profile pages (My Profile, Wallet Account, Withdrawal Account, History Transactions)
+- Wallet connectivity (MetaMask, OKX, Phantom, Solflare)
+- Profile pages (My Profile, Wallet Account, Withdrawal Account, History)
 - QRIS payment method
-- Estimate text with correct currency labels
+- On-chain checkout with "Sign & Send" flow
 
 ## What's Mocked
-- Google Sign-In (mock only)
-- All exchange rates (hardcoded in mockData.js)
-- Wallet balances (hardcoded in mockData.js)
-- Transaction execution (no real blockchain interaction)
+- Wallet balances in withdraw tab (hardcoded in mockData.js)
 
-## Pending/Upcoming Tasks
-- P1: Implement Real Google OAuth Sign-In (needs API keys)
-- P2: Real-time price feeds from CoinGecko API
-- P2: Real transaction processing (blockchain integration)
-- P3: State management optimization (App.js refactoring)
-
-## Test Credentials
-- Email: test@meridiant.com
-- Password: Test1234!
+## API Endpoints
+- POST /api/auth/signup, POST /api/auth/signin, GET /api/auth/me
+- POST /api/auth/google-session (Emergent Auth)
+- GET /api/prices (CoinGecko real-time)
+- POST /api/wallet/connect, DELETE /api/wallet/disconnect
+- POST /api/transactions, GET /api/transactions
+- PUT /api/profile
+- POST /api/bank-accounts, GET /api/bank-accounts, DELETE /api/bank-accounts/:id
 
 ## Key Files
+- `/app/backend/server.py` - All backend API endpoints
 - `/app/frontend/src/components/meridiant/TransferForm.jsx` - Main form
-- `/app/frontend/src/data/mockData.js` - Currency data, rates, balances
-- `/app/frontend/src/App.js` - Main app component
-- `/app/backend/server.py` - Backend API
+- `/app/frontend/src/components/meridiant/Modals.jsx` - Auth, wallet, checkout modals
+- `/app/frontend/src/lib/onchain.js` - Blockchain transaction utilities
+- `/app/frontend/src/lib/api.js` - API client
+- `/app/frontend/src/data/mockData.js` - Token data, mock balances
+- `/app/frontend/src/App.js` - Main app with auth callback
+
+## Future Tasks
+- P2: Fetch real wallet balances from blockchain (replace mocked balances)
+- P2: SPL token transfers on Solana (USDT, USDC)
+- P3: State management optimization
+- P3: Transaction history with explorer links
