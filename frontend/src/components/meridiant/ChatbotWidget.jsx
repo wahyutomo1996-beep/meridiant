@@ -36,7 +36,7 @@ const ChatbotWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50" data-testid="chatbot-widget">
+    <div className="fixed bottom-[68px] right-4 sm:bottom-5 sm:right-5 z-50" data-testid="chatbot-widget">
       {/* Chat Window */}
       {isOpen && (
         <div
