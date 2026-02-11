@@ -38,6 +38,8 @@ export const cryptoCurrencies = [
     logo: 'https://assets.coingecko.com/coins/images/6319/small/usdc.png' },
   { code: 'USDC', name: 'USD Coin (Arbitrum)', color: '#2775CA', chain: 'Arbitrum', displayCode: 'USDC.Arb',
     logo: 'https://assets.coingecko.com/coins/images/6319/small/usdc.png' },
+  { code: 'USDC', name: 'USD Coin (Solana)', color: '#2775CA', chain: 'Solana', displayCode: 'USDC.Sol',
+    logo: 'https://assets.coingecko.com/coins/images/6319/small/usdc.png' },
   { code: 'BNB', name: 'BNB', color: '#F0B90B', chain: 'BSC',
     logo: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png' },
   { code: 'SOL', name: 'Solana', color: '#9945FF', chain: 'Solana',
