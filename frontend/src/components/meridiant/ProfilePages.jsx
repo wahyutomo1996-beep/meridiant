@@ -102,7 +102,7 @@ export const WalletAccountPage = ({ walletConnected, connectedWallet, walletAddr
             </div>
             <div>
               <h3 className="text-white font-semibold">{connectedWallet?.name || 'Wallet'}</h3>
-              <p className="text-emerald-400 text-sm font-mono">{walletAddress}</p>
+              <p className="text-emerald-400 text-xs sm:text-sm font-mono break-all">{walletAddress}</p>
             </div>
           </div>
           <div className="rounded-xl p-4 mb-4" style={{ background: '#0c1120' }}>
