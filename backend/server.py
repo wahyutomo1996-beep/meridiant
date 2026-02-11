@@ -89,8 +89,8 @@ class TransactionResponse(BaseModel):
     chain: Optional[str] = None
     created_at: str
 
-class GoogleSessionRequest(BaseModel):
-    session_id: str
+class GoogleAuthRequest(BaseModel):
+    credential: str
 
 class ProfileUpdate(BaseModel):
     name: Optional[str] = None
