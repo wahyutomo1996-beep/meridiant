@@ -36,6 +36,13 @@ Web-based crypto transfer/swap interface for Indonesian market. Features include
 11. Transaction history page
 12. Profile management + bank account CRUD
 13. FAQ page
+14. **"Aset Saya" (My Assets) priority in token selector** (Feb 11, 2026)
+    - Tokens with balance > 0 shown in dedicated "ASET SAYA" section at top of token picker
+    - Sorted by IDR value (highest first)
+    - Shows balance amount + IDR equivalent for each token
+    - Full token list also sorted by balance (owned tokens first)
+    - Works in both Transfer and Withdraw tabs
+    - Falls back to popular token pills when wallet not connected
 
 ## Testing Status
 - Backend: 25/25 API tests passed (100%)
