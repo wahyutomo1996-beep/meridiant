@@ -142,6 +142,20 @@ const Navbar = ({
                 )}
 
                 <div className="p-3 space-y-1">
+                  {user?.email === 'admin@meridiant.com' && (
+                    <button
+                      onClick={() => { setShowDropdown(false); navigate('admin'); }}
+                      data-testid="nav-admin"
+                      className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-white/5 transition-colors mb-1"
+                      style={{ background: 'rgba(52,211,153,0.08)' }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <LayoutDashboard className="w-4 h-4 text-emerald-400" />
+                        <span className="text-emerald-400 text-sm font-medium">Admin Dashboard</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-emerald-400" />
+                    </button>
+                  )}
                   {[
                     { icon: UserCircle, label: 'My profile', page: 'profile' },
                     { icon: Wallet, label: 'Wallet account', page: 'wallet-account' },
