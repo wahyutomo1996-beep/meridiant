@@ -1,10 +1,10 @@
 # Meridiant - Crypto On-Chain/Off-Chain Platform
 
 ## Original Problem Statement
-Build a crypto on-chain/off-chain platform named "Meridiant" for Indonesian market. Features include Transfer (on-chain crypto-to-crypto) and Withdraw (off-chain crypto-to-fiat) with wallet connectivity, real-time prices, and Google OAuth. Model bisnis: OTC/Centralized (user kirim crypto ke alamat deposit platform).
+Build a crypto on-chain/off-chain platform named "Meridiant" for Indonesian market. Features include Transfer (on-chain crypto-to-crypto) and Withdraw (off-chain crypto-to-fiat) with wallet connectivity, real-time prices, and Google OAuth. Model bisnis: OTC/Centralized.
 
 ## Tech Stack
-- Frontend: React.js (CRA + craco), ethers.js, @solana/web3.js
+- Frontend: React.js (CRA + craco), ethers.js, @solana/web3.js, Space Grotesk font
 - Backend: FastAPI (Python) with httpx for CoinGecko API
 - Database: MongoDB (Motor async driver)
 - UI: Tailwind CSS + Shadcn/UI
@@ -13,53 +13,45 @@ Build a crypto on-chain/off-chain platform named "Meridiant" for Indonesian mark
 - Prices: CoinGecko API with fallback
 - Deployment: Docker + Nginx + Let's Encrypt SSL
 
-## What's Implemented (Production-Ready)
+## What's Implemented
 
-### Authentication
+### Core Features
 - Email/password Sign In & Sign Up with JWT tokens
-- Direct Google OAuth via @react-oauth/google (user's own Client ID)
-- Backend token verification via Google tokeninfo API
-- Session restoration on page load
-- Test account: test@meridiant.com / Test1234!
-
-### Real-time Price Feeds
-- CoinGecko API integration with 66 rate pairs
-- 60-second cache with automatic fallback to hardcoded rates
-
-### On-Chain Transactions (BSC + Polygon + Solana)
-- ERC-20 token transfers on BSC (IDRT, USDT, USDC)
-- ERC-20 token transfers on Polygon (IDRT, USDT, USDC)
-- Native transfers (BNB, MATIC, SOL)
+- Direct Google OAuth via @react-oauth/google
+- Real-time CoinGecko price feeds (66 rate pairs)
+- On-chain transactions (BSC, Polygon, Solana)
+- Real wallet balances via Alchemy RPC
 - Real deposit address: 0xdf32c54583b4d83939b93aa2ca23487d4eb853da
 
-### Real Wallet Balances
-- Alchemy RPC integration for BSC and Polygon
-- Backend /api/wallet/balances/{address} fetches real on-chain data
+### UI/UX (Optimized)
+- Hero section: "Transfer Crypto Instan & Aman" with gradient text
+- Supported chain pills (BNB Chain, Polygon, Solana, Ethereum, Avalanche)
+- Feature badges (Instan, Aman, Multi-Chain)
+- Mobile-first responsive design with hamburger menu
+- Micro-animations (fade-up, scale-in, glass cards, button press)
+- FAQ page in Indonesian (8 items, expandable)
+- Smart number formatting (thousand separators, no trailing zeros)
+- Token selector fullscreen on mobile
+- Profile pages with responsive layout
 
-### Deployment Files (NEW)
+### Deployment Files
 - Docker multi-stage builds (backend + frontend)
 - docker-compose.yml (MongoDB + Backend + Frontend + Nginx)
 - Nginx reverse proxy with SSL (Let's Encrypt)
 - Automated deploy.sh script for VPS
-- Production environment template (.env.production.example)
-- Complete DEPLOYMENT.md guide
-
-## API Endpoints
-- POST /api/auth/signup, POST /api/auth/signin, GET /api/auth/me
-- POST /api/auth/google
-- GET /api/prices
-- POST /api/wallet/connect, DELETE /api/wallet/disconnect
-- GET /api/wallet/balances/{address}
-- POST /api/transactions, GET /api/transactions
-- PUT /api/profile
-- POST /api/bank-accounts, GET /api/bank-accounts, DELETE /api/bank-accounts/:id
+- DEPLOYMENT.md guide
 
 ## Testing Status
 - iteration_1.json: 100% passed
-- iteration_2.json: 100% passed
+- iteration_2.json: 100% passed  
 - iteration_3.json: 100% passed (25/25 backend, all frontend)
+- iteration_4.json: 100% passed (19/19 UI/UX + 3/3 backend)
 
 ## Upcoming Tasks
-- P1: Setup SSL Certificate (HTTPS via Let's Encrypt) - instruksi sudah ada di deploy.sh
-- P2: Security Audit for smart contract interactions
-- P2: SPL token transfers di Solana (USDT, USDC)
+- P0: Deploy ke VPS (menunggu user)
+- P1: Admin Dashboard (monitor transaksi OTC)
+- P1: Notifikasi transaksi (Email/Telegram)
+- P2: SPL token transfers Solana (USDT, USDC)
+- P2: Rate limit & security hardening
+- P3: Multi-language (ID/EN toggle)
+- P3: Referral system, KYC integration
