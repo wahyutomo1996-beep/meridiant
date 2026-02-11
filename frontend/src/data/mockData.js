@@ -237,6 +237,8 @@ export const exchangeRates = {
   IDR_LINK: 0.0000435,
   IDR_UNI: 0.0000625,
   IDRT_IDR: 1,
+  'IDRT.BSC_IDR': 1,
+  'IDRT.Poly_IDR': 1,
   ETH_IDR: 26000000,
   'ETH.Base_IDR': 26000000,
   'ETH.Arb_IDR': 26000000,
