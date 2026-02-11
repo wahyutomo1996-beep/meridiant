@@ -1,0 +1,57 @@
+{
+  "summary": "Completed frontend testing for Meridiant crypto platform - all requested features verified working correctly",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Token selector modal",
+        "issues": ["Console warnings about missing DialogTitle and aria-describedby for accessibility - non-blocking but should be fixed"]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Minor: Add DialogTitle and aria-describedby to TokenSelectorModal for accessibility compliance"
+  ],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A - frontend only testing",
+    "frontend": "100%"
+  },
+  "test_credentials": "None required",
+  "seed_data_creation": "None - uses mocked data in mockData.js",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All features tested and working: number formatting (formatAmount), token selector with IDRT/USDT/USDC variants on multiple chains, withdraw percentage buttons, estimate text with both currency labels",
+  "test_results": {
+    "number_formatting": {
+      "IDRT_receive_100k_IDR": "PASSED - shows '100,000' (clean format without trailing zeros)",
+      "ETH_receive_1M_IDR": "PASSED - shows '0.0384' (appropriate small decimal, no trailing zeros)",
+      "withdraw_receive_formatted": "PASSED - shows '2,500,000' (formatted with commas)"
+    },
+    "token_selector": {
+      "IDRT_variants": "PASSED - found 3 variants: Ethereum, BSC, Polygon with chain badges",
+      "USDT_variants": "PASSED - found 8 variants: Ethereum, BSC, Arbitrum, Base, Solana, Polygon, Optimism, Avalanche",
+      "USDC_variants": "PASSED - found 8 variants: Ethereum, Base, Arbitrum, Solana, BSC, Polygon, Optimism, Avalanche",
+      "IDRT_BSC_selection": "PASSED - can select IDRT.BSC and conversion works correctly"
+    },
+    "withdraw_tab": {
+      "percentage_buttons": "PASSED - 25%, 50%, 75%, 100% buttons found and working",
+      "available_balance": "PASSED - shows '5,000,000 IDRT' (formatted with commas)",
+      "50_percent_fill": "PASSED - correctly fills 2,500,000 from 5,000,000 balance"
+    },
+    "estimate_text": {
+      "both_currency_labels": "PASSED - shows 'You'll receive an estimate of X CURRENCY for Y CURRENCY'"
+    }
+  },
+  "mocked_apis": {
+    "Exchange rates": "Mocked in mockData.js",
+    "Wallet balances": "Mocked in mockData.js"
+  }
+}
