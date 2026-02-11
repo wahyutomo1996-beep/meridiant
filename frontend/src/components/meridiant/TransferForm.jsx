@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, Search, Building2, Smartphone, QrCode, X, TrendingUp } from 'lucide-react';
-import { Dialog, DialogContent } from '../ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import {
   fiatCurrencies, cryptoCurrencies, transferMethodGroups,
