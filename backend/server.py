@@ -538,6 +538,189 @@ async def delete_bank_account(account_id: str, user=Depends(get_current_user)):
     )
     return {"deleted": True}
 
+# ============ CHATBOT (AI Customer Service) ============
+
+CHATBOT_SYSTEM = """Kamu adalah asisten customer service Meridiant, platform transfer dan pertukaran crypto untuk pasar Indonesia.
+
+Informasi tentang Meridiant:
+- Platform transfer crypto on-chain dan withdraw off-chain (crypto ke fiat)
+- Mendukung blockchain: BNB Chain (BSC), Polygon, Solana, Ethereum, Arbitrum, Optimism, Base, Avalanche
+- Token yang didukung: IDRT, USDT, USDC, ETH, BNB, SOL, MATIC, dan lainnya
+- Wallet yang didukung: MetaMask, OKX Wallet, Phantom, Solflare
+- Login via email/password atau Google OAuth
+- Biaya: Hanya gas fee jaringan blockchain, Meridiant tidak mengenakan biaya tambahan
+- Transfer dilakukan langsung di blockchain (on-chain), aman dan transparan
+- Setiap transaksi bisa diverifikasi di block explorer
+
+Panduan menjawab:
+- Jawab dalam Bahasa Indonesia kecuali user berbicara bahasa lain
+- Jawab singkat, ramah, dan informatif (maksimal 3 paragraf)
+- Jika tidak tahu jawabannya, arahkan user untuk menghubungi support@meridiant.com
+- Jangan pernah minta private key atau seed phrase user
+- Jangan memberikan saran investasi"""
+
+@api_router.post("/chat")
+async def chat_endpoint(data: ChatMessage):
+    session_id = data.session_id or str(uuid.uuid4())
+    try:
+        # Load chat history from DB
+        history_doc = await db.chat_sessions.find_one({"_id": session_id})
+        messages = history_doc.get("messages", []) if history_doc else []
+
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=session_id,
+            system_message=CHATBOT_SYSTEM
+        ).with_model("openai", "gpt-4.1-mini")
+
+        # Replay history into chat context
+        for msg in messages[-10:]:  # Last 10 messages for context
+            if msg["role"] == "user":
+                await chat.send_message(UserMessage(text=msg["content"]))
+            # Assistant messages are automatically tracked by LlmChat
+
+        # Send new message
+        response = await chat.send_message(UserMessage(text=data.message))
+
+        # Save to DB
+        messages.append({"role": "user", "content": data.message, "ts": datetime.now(timezone.utc).isoformat()})
+        messages.append({"role": "assistant", "content": response, "ts": datetime.now(timezone.utc).isoformat()})
+        await db.chat_sessions.update_one(
+            {"_id": session_id},
+            {"$set": {"messages": messages, "updated_at": datetime.now(timezone.utc).isoformat()}},
+            upsert=True
+        )
+
+        return {"reply": response, "session_id": session_id}
+    except Exception as e:
+        logger.error(f"Chat error: {e}")
+        return {"reply": "Maaf, terjadi gangguan pada sistem kami. Silakan coba lagi atau hubungi support@meridiant.com", "session_id": session_id}
+
+# ============ ADMIN DASHBOARD ============
+
+async def get_admin_user(request: Request):
+    user = await get_current_user(request)
+    if user.get("email") != ADMIN_EMAIL:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+@api_router.get("/admin/stats")
+async def admin_stats(user=Depends(get_admin_user)):
+    total_users = await db.users.count_documents({})
+    total_txs = await db.transactions.count_documents({})
+    completed_txs = await db.transactions.count_documents({"status": "completed"})
+    pending_txs = await db.transactions.count_documents({"status": "pending"})
+
+    # Recent 24h stats
+    day_ago = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+    recent_txs = await db.transactions.count_documents({"created_at": {"$gte": day_ago}})
+    recent_users = await db.users.count_documents({"created_at": {"$gte": day_ago}})
+
+    # Volume by token (top 5)
+    pipeline = [
+        {"$group": {"_id": "$from_currency", "count": {"$sum": 1}, "total": {"$sum": {"$toDouble": "$from_amount"}}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 5}
+    ]
+    volume_by_token = []
+    async for doc in db.transactions.aggregate(pipeline):
+        volume_by_token.append({"token": doc["_id"], "count": doc["count"], "total": doc["total"]})
+
+    return {
+        "total_users": total_users,
+        "total_transactions": total_txs,
+        "completed_transactions": completed_txs,
+        "pending_transactions": pending_txs,
+        "recent_24h_transactions": recent_txs,
+        "recent_24h_users": recent_users,
+        "volume_by_token": volume_by_token,
+    }
+
+@api_router.get("/admin/transactions")
+async def admin_transactions(user=Depends(get_admin_user), limit: int = 50, skip: int = 0):
+    txs = await db.transactions.find().sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    result = []
+    for t in txs:
+        # Get user info
+        tx_user = await db.users.find_one({"_id": t.get("user_id")})
+        result.append({
+            "id": t["_id"],
+            "user_email": tx_user["email"] if tx_user else "unknown",
+            "user_name": tx_user["name"] if tx_user else "unknown",
+            "type": t["type"],
+            "from_currency": t["from_currency"],
+            "from_amount": t["from_amount"],
+            "to_currency": t["to_currency"],
+            "to_amount": t["to_amount"],
+            "status": t["status"],
+            "tx_hash": t.get("tx_hash"),
+            "chain": t.get("chain"),
+            "created_at": t["created_at"],
+        })
+    total = await db.transactions.count_documents({})
+    return {"transactions": result, "total": total}
+
+@api_router.get("/admin/users")
+async def admin_users(user=Depends(get_admin_user), limit: int = 50, skip: int = 0):
+    users = await db.users.find().sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    result = []
+    for u in users:
+        tx_count = await db.transactions.count_documents({"user_id": u["_id"]})
+        result.append({
+            "id": u["_id"],
+            "name": u["name"],
+            "email": u["email"],
+            "auth_type": u.get("auth_type", "email"),
+            "wallet_connected": u.get("wallet_connected", False),
+            "wallet_address": u.get("wallet_address"),
+            "created_at": u.get("created_at", ""),
+            "transaction_count": tx_count,
+        })
+    total = await db.users.count_documents({})
+    return {"users": result, "total": total}
+
+# ============ TELEGRAM NOTIFICATIONS ============
+
+async def send_telegram_notification(message: str):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return
+    try:
+        async with httpx.AsyncClient(timeout=10) as http:
+            await http.post(
+                f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                json={"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "HTML"}
+            )
+    except Exception as e:
+        logger.warning(f"Telegram notification failed: {e}")
+
+@api_router.post("/admin/telegram-config")
+async def set_telegram_config(data: TelegramConfig, user=Depends(get_admin_user)):
+    """Save Telegram bot config to DB"""
+    await db.settings.update_one(
+        {"_id": "telegram"},
+        {"$set": {"bot_token": data.bot_token, "chat_id": data.chat_id}},
+        upsert=True
+    )
+    # Test the connection
+    try:
+        async with httpx.AsyncClient(timeout=10) as http:
+            resp = await http.post(
+                f"https://api.telegram.org/bot{data.bot_token}/sendMessage",
+                json={"chat_id": data.chat_id, "text": "Meridiant notification connected! You will receive transaction alerts here."}
+            )
+            if resp.status_code != 200:
+                raise HTTPException(status_code=400, detail="Failed to send test message. Check bot token and chat ID.")
+    except httpx.HTTPError:
+        raise HTTPException(status_code=400, detail="Failed to connect to Telegram.")
+    return {"status": "connected"}
+
+@api_router.get("/admin/telegram-config")
+async def get_telegram_config(user=Depends(get_admin_user)):
+    config = await db.settings.find_one({"_id": "telegram"})
+    if not config:
+        return {"configured": False}
+    return {"configured": True, "chat_id": config.get("chat_id", "")}
+
 # ============ HEALTH ============
 
 @api_router.get("/")
