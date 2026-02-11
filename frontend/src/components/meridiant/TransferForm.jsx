@@ -294,7 +294,8 @@ const TransferForm = ({ isLoggedIn, walletConnected, onTransfer }) => {
     const rate = exchangeRates[`${fromKey}_${toKey}`];
     if (rate) {
       const result = parseFloat(fromAmount) * rate;
-      setToAmount(activeTab === 'transfer' ? result.toFixed(8) : result.toLocaleString('id-ID'));
+      const isFiatOutput = activeTab === 'withdraw';
+      setToAmount(formatAmount(result, isFiatOutput));
     } else { setToAmount('0'); }
   }, [fromAmount, fromCurrency, toCurrency, activeTab]);
 
