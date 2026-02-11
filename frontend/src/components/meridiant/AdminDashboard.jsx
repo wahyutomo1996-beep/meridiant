@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Users, ArrowUpDown, BarChart3, Bell, RefreshCw, Search, ExternalLink, Settings } from 'lucide-react';
 import api from '@/lib/api';
-import { smartFormat } from '@/lib/smart-format';
+
+const smartFormat = (num) => {
+  if (num == null || isNaN(num)) return '0';
+  return Number(num).toLocaleString('en-US', { maximumFractionDigits: 2 });
+};
 
 const StatCard = ({ label, value, icon: Icon, accent = false }) => (
   <div className="glass-card rounded-xl p-4 sm:p-5">
