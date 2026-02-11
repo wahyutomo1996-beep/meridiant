@@ -180,6 +180,8 @@ export const exchangeRates = {
   USDT_IDR: 16400,
   'USDT.BSC_IDR': 16400,
   'USDT.Arb_IDR': 16400,
+  'USDT.Base_IDR': 16400,
+  'USDT.Sol_IDR': 16400,
   USDC_IDR: 16400,
   'USDC.Base_IDR': 16400,
   'USDC.Arb_IDR': 16400,
