@@ -3,7 +3,8 @@ import { ChevronDown, Search, Building2, Smartphone, QrCode, X, TrendingUp, Cloc
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import {
   fiatCurrencies, cryptoCurrencies, transferMethodGroups,
-  withdrawDestGroups, exchangeRates, chainLogos, mockBalances, MIN_AMOUNT_IDR
+  withdrawDestGroups, exchangeRates, chainLogos, mockBalances, MIN_AMOUNT_IDR,
+  TRADE_FEE_RATE, PLATFORM_FEE_RATE, PLATFORM_FEE_THRESHOLD
 } from '@/data/mockData';
 
 const networks = [
