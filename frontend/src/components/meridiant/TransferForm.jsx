@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronDown, Search, Building2, Smartphone, QrCode, X, TrendingUp } from 'lucide-react';
+import { ChevronDown, Search, Building2, Smartphone, QrCode, X, TrendingUp, Clock, Check, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import {
   fiatCurrencies, cryptoCurrencies, transferMethodGroups,
-  withdrawDestGroups, exchangeRates, chainLogos, mockBalances
+  withdrawDestGroups, exchangeRates, chainLogos, mockBalances, MIN_AMOUNT_IDR
 } from '@/data/mockData';
 
 const networks = [
