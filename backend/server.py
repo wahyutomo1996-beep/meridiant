@@ -468,6 +468,30 @@ async def create_transaction(data: TransactionCreate, user=Depends(get_current_u
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.transactions.insert_one(tx_doc)
+
+    # Send Telegram notification
+    tg_config = await db.settings.find_one({"_id": "telegram"})
+    if tg_config:
+        emoji = "🔄" if data.type == "transfer" else "💸"
+        msg = (
+            f"{emoji} <b>Transaksi Baru - {tx_id}</b>\n"
+            f"User: {user['email']}\n"
+            f"Tipe: {data.type.upper()}\n"
+            f"Dari: {data.from_amount} {data.from_currency}\n"
+            f"Ke: {data.to_amount} {data.to_currency}\n"
+            f"Status: {tx_doc['status']}"
+        )
+        if data.tx_hash:
+            msg += f"\nTx Hash: <code>{data.tx_hash[:20]}...</code>"
+        try:
+            async with httpx.AsyncClient(timeout=10) as http:
+                await http.post(
+                    f"https://api.telegram.org/bot{tg_config['bot_token']}/sendMessage",
+                    json={"chat_id": tg_config['chat_id'], "text": msg, "parse_mode": "HTML"}
+                )
+        except Exception as e:
+            logger.warning(f"Telegram tx notification failed: {e}")
+
     return {
         "id": tx_id, "type": data.type,
         "from_currency": data.from_currency, "from_amount": data.from_amount,
