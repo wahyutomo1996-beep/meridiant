@@ -670,8 +670,10 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
         </button>
       </div>
 
-      <TokenSelectorModal open={showFromPicker} onClose={() => setShowFromPicker(false)} currencies={fromList} selected={fromCurrency} onSelect={setFromCurrency} type={fromType} />
-      <TokenSelectorModal open={showToPicker} onClose={() => setShowToPicker(false)} currencies={toList} selected={toCurrency} onSelect={setToCurrency} type={toType} />
+      <TokenSelectorModal open={showFromPicker} onClose={() => setShowFromPicker(false)} currencies={fromList} selected={fromCurrency} onSelect={setFromCurrency} type={fromType}
+        balances={walletConnected ? { real: realBalances, mock: mockBalances } : null} walletConnected={walletConnected} liveRates={liveRates} />
+      <TokenSelectorModal open={showToPicker} onClose={() => setShowToPicker(false)} currencies={toList} selected={toCurrency} onSelect={setToCurrency} type={toType}
+        balances={walletConnected ? { real: realBalances, mock: mockBalances } : null} walletConnected={walletConnected} liveRates={liveRates} />
       <MethodPickerModal
         open={showMethodPicker}
         onClose={() => setShowMethodPicker(false)}
