@@ -134,7 +134,7 @@ async def get_current_user(request: Request):
 # ============ COINGECKO PRICE CACHE ============
 
 price_cache = {"data": None, "timestamp": 0}
-CACHE_TTL = 30
+CACHE_TTL = 60
 
 COINGECKO_MAP = {
     "ethereum": "ETH",
@@ -157,6 +157,27 @@ CHAIN_SUFFIXES = {
     "USDT": [".BSC", ".Arb", ".Base", ".Sol", ".Poly", ".OP", ".Avax"],
     "USDC": [".Base", ".Arb", ".Sol", ".BSC", ".Poly", ".OP", ".Avax"],
 }
+
+# Fallback rates when CoinGecko is unavailable
+FALLBACK_IDR_PRICES = {
+    "ETH": 26000000, "BTC": 435000000, "USDT": 16400, "USDC": 16400,
+    "BNB": 9700000, "SOL": 2400000, "MATIC": 6500, "AVAX": 437000,
+    "ARB": 18200, "OP": 25600, "LINK": 230000, "UNI": 160000, "WBTC": 435000000,
+}
+
+def build_rates(price_map):
+    """Build full rate table from IDR prices"""
+    rates = {}
+    for suffix in ["", ".BSC", ".Poly"]:
+        rates[f"IDR_IDRT{suffix}"] = 1
+        rates[f"IDRT{suffix}_IDR"] = 1
+    for symbol, idr_price in price_map.items():
+        rates[f"{symbol}_IDR"] = idr_price
+        rates[f"IDR_{symbol}"] = 1 / idr_price if idr_price else 0
+        for chain_suffix in CHAIN_SUFFIXES.get(symbol, []):
+            rates[f"{symbol}{chain_suffix}_IDR"] = idr_price
+            rates[f"IDR_{symbol}{chain_suffix}"] = 1 / idr_price if idr_price else 0
+    return rates
 
 @api_router.get("/prices")
 async def get_live_prices():
