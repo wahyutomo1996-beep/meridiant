@@ -457,7 +457,8 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
             <CurrencyBtn currency={fromCurrency} type={fromType} onClick={() => setShowFromPicker(true)} />
             <input type="number" inputMode="decimal" placeholder="0" value={fromAmount} onChange={e => setFromAmount(e.target.value)}
               data-testid="from-amount-input"
-              className="w-0 flex-1 min-w-0 bg-transparent text-white text-right text-sm sm:text-base outline-none placeholder:text-gray-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              className="w-0 flex-1 min-w-0 bg-transparent text-right text-sm sm:text-base outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              style={{ color: 'var(--text-primary)' }} />
           </div>
           {amountError && (
             <div className="flex items-center gap-1.5 mt-1.5 px-1" data-testid="amount-error">
