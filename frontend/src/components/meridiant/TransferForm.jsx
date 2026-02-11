@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from '../ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import {
   fiatCurrencies, cryptoCurrencies, transferMethodGroups,
-  withdrawDestGroups, exchangeRates, chainLogos
+  withdrawDestGroups, exchangeRates, chainLogos, mockBalances
 } from '@/data/mockData';
 
 const networks = [
