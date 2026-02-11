@@ -517,10 +517,10 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
         {/* Fee estimation */}
         {fromAmount && parseFloat(fromAmount) > 0 && (
-          <div className="mb-4 rounded-xl px-4 py-3 space-y-2" style={{ background: '#0c1120' }} data-testid="fee-estimation">
+          <div className="mb-4 rounded-xl px-3 sm:px-4 py-3 space-y-2" style={{ background: '#0c1120' }} data-testid="fee-estimation">
             <div className="flex items-center justify-between">
               <span className="text-gray-500 text-xs">Estimasi yang diterima</span>
-              <span className="text-emerald-400 text-sm font-medium">{toAmount || '0'} {toCurrency.displayCode || toCurrency.code}</span>
+              <span className="text-emerald-400 text-xs sm:text-sm font-medium truncate ml-2">{toAmount || '0'} {toCurrency.displayCode || toCurrency.code}</span>
             </div>
             {activeTab === 'transfer' && (
               <div className="flex items-center justify-between">
