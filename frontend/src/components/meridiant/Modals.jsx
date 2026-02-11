@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Eye, EyeOff, Loader2, Check, Search, Wallet2, Hexagon, Shield, Flame, Layers } from 'lucide-react';
-import { wallets } from '@/data/mockData';
+import { wallets, QRIS_IMAGE } from '@/data/mockData';
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" className="flex-shrink-0">
