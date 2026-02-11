@@ -1,0 +1,94 @@
+{
+  "summary": "Iteration 9: All NEW features tested and working. Backend: 11/11 tests passed. Frontend: All 4 new features verified - Fee structure (trade 0.3% + platform 0.2%), TON chain tokens, Dark/Light mode toggle, Auth button consolidation. Mobile responsive verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration9_new_features.py",
+    "/app/test_reports/pytest/pytest_results_iteration9.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_iteration9_new_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "100% (all new features verified)"
+  },
+  "test_credentials": {
+    "test_user": "test@meridiant.com / Test1234!",
+    "admin": "admin@meridiant.com / Admin1234!"
+  },
+  "seed_data_creation": "None - using existing test users",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 4 new features from this iteration are verified and working: 1) Fee structure with trade_fee 0.3% + platform_fee 0.2% for purchases >= Rp 50k, 2) TON chain added with Toncoin and USDT.TON tokens, 3) Dark/Light mode toggle using data-theme attribute and CSS variables, 4) Auth button consolidated with 'Login / Sign up' dropdown menu.",
+  "test_results": {
+    "backend_api_tests": {
+      "signup_new_user": "PASSED - POST /api/auth/signup creates user and returns token",
+      "signup_duplicate_rejected": "PASSED - Returns 400 for duplicate email",
+      "signin_success": "PASSED - POST /api/auth/signin works with test@meridiant.com / Test1234!",
+      "signin_invalid_password": "PASSED - Returns 401 for wrong password",
+      "get_prices_includes_ton": "PASSED - TON_IDR, IDR_TON, USDT.TON_IDR, IDR_USDT.TON all present",
+      "transaction_100000_idr_full_fees": "PASSED - trade_fee=300, platform_fee=200, total=500",
+      "transaction_30000_idr_only_trade_fee": "PASSED - trade_fee=90, platform_fee=0, total=90",
+      "transaction_below_minimum_rejected": "PASSED - Returns 400 for amount < 10000 IDR",
+      "transaction_50000_threshold": "PASSED - At threshold: trade_fee=150, platform_fee=100",
+      "transaction_49999_below_threshold": "PASSED - Below threshold: trade_fee=150, platform_fee=0",
+      "health_check": "PASSED - Meridiant API v2.0.0"
+    },
+    "frontend_ui_tests": {
+      "dark_mode_default": "PASSED - data-theme='dark' on load, --bg-primary=#080d18",
+      "theme_toggle_visible": "PASSED - Desktop: [data-testid='theme-toggle'], Mobile: [data-testid='mobile-theme-toggle']",
+      "theme_toggle_to_light": "PASSED - Click switches to data-theme='light'",
+      "theme_toggle_back_to_dark": "PASSED - Second click switches back to 'dark'",
+      "auth_button_text": "PASSED - Shows 'Login / Sign up'",
+      "auth_dropdown_signin": "PASSED - [data-testid='signin-btn'] shows 'Sign In'",
+      "auth_dropdown_signup": "PASSED - [data-testid='signup-btn'] shows 'Sign Up'",
+      "fee_display_100000": "PASSED - Shows Trade fee (0.3%) Rp 300, Platform fee (0.2%) Rp 200, Total ~Rp 500",
+      "fee_display_30000": "PASSED - Shows Trade fee (0.3%) Rp 90, NO platform fee, Total ~Rp 90",
+      "ton_token_picker": "PASSED - Searching 'TON' shows Toncoin (TON) and Tether (USDT.TON) with TON network badge",
+      "light_mode_renders": "PASSED - Hero text readable, form card visible in light mode",
+      "mobile_input_overflow": "PASSED - Large numbers (99999999) stay within input bounds",
+      "mobile_theme_toggle": "PASSED - Theme toggle works on mobile",
+      "mobile_menu_auth": "PASSED - Sign in / Sign up buttons visible in mobile menu",
+      "chatbot_widget": "PASSED - Visible in bottom-right corner"
+    }
+  },
+  "features_verified": {
+    "fee_structure": {
+      "status": "WORKING",
+      "details": "Trade fee 0.3% always applied for IDR->crypto transfers. Platform fee 0.2% applied only when amount >= Rp 50,000. Backend returns trade_fee, platform_fee, total_fee in transaction response. Frontend displays fee breakdown correctly."
+    },
+    "ton_chain_support": {
+      "status": "WORKING",
+      "details": "TON added to networks list, Toncoin (TON) and USDT.TON in cryptoCurrencies. GET /api/prices returns TON_IDR=50000 and USDT.TON_IDR=16400. Token picker shows TON tokens with network badge when searching 'TON'."
+    },
+    "dark_light_mode": {
+      "status": "WORKING",
+      "details": "Dark mode is default. Theme stored in localStorage as 'mrd-theme'. Toggle uses data-theme attribute on documentElement. CSS variables defined in index.css for both themes. Light mode properly hides space elements and adjusts shadows."
+    },
+    "auth_button_consolidation": {
+      "status": "WORKING",
+      "details": "Single 'Login / Sign up' button with dropdown containing Sign In and Sign Up options. Uses data-testid='auth-toggle-btn' for main button, 'signin-btn' and 'signup-btn' for dropdown items. Mobile has separate buttons in hamburger menu."
+    }
+  },
+  "fee_calculation_summary": {
+    "trade_fee_rate": "0.003 (0.3%)",
+    "platform_fee_rate": "0.002 (0.2%)",
+    "platform_fee_threshold": "50000 IDR",
+    "examples": {
+      "100000_IDR": "trade_fee=300, platform_fee=200, total=500",
+      "50000_IDR": "trade_fee=150, platform_fee=100, total=250",
+      "49999_IDR": "trade_fee=150, platform_fee=0, total=150",
+      "30000_IDR": "trade_fee=90, platform_fee=0, total=90"
+    }
+  }
+}
