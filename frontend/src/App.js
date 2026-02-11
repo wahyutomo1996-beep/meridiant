@@ -15,7 +15,7 @@ import {
 import { MyProfilePage, WalletAccountPage, WithdrawalAccountPage, HistoryTransactionsPage } from "@/components/meridiant/ProfilePages";
 import { authAPI, walletAPI, pricesAPI } from "@/lib/api";
 import { exchangeRates as fallbackRates } from "@/data/mockData";
-import { Shield, Zap, Globe, ChevronDown, ChevronUp } from "lucide-react";
+import { Shield, Zap, Globe, ChevronDown, ChevronUp, Sun, Moon } from "lucide-react";
 import ChatbotWidget from "@/components/meridiant/ChatbotWidget";
 import AdminDashboard from "@/components/meridiant/AdminDashboard";
 
