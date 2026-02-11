@@ -91,39 +91,52 @@ export const MyProfilePage = ({ user, onBack, onUpdate }) => {
 };
 
 // ========== WALLET ACCOUNT ==========
-export const WalletAccountPage = ({ walletConnected, connectedWallet, walletAddress, onConnectWallet, onDisconnectWallet, onBack }) => (
-  <PageShell title="Wallet Account" onBack={onBack}>
-    <Card>
-      {walletConnected ? (
-        <>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: (connectedWallet?.color === '#000000' ? '#333' : connectedWallet?.color || '#34d399') + '20' }}>
-              <Wallet className="w-6 h-6" style={{ color: connectedWallet?.color === '#000000' ? '#fff' : connectedWallet?.color }} />
+export const WalletAccountPage = ({ walletConnected, connectedWallet, walletAddress, onConnectWallet, onDisconnectWallet, onBack }) => {
+  const [copied, setCopied] = useState(false);
+  const copyAddress = () => {
+    navigator.clipboard.writeText(walletAddress);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <PageShell title="Wallet Account" onBack={onBack}>
+      <Card>
+        {walletConnected ? (
+          <>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: (connectedWallet?.color === '#000000' ? '#333' : connectedWallet?.color || '#34d399') + '20' }}>
+                <Wallet className="w-6 h-6" style={{ color: connectedWallet?.color === '#000000' ? '#fff' : connectedWallet?.color }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-white font-semibold">{connectedWallet?.name || 'Wallet'}</h3>
+                <div className="flex items-center gap-2">
+                  <p className="text-emerald-400 text-xs sm:text-sm font-mono break-all">{walletAddress}</p>
+                  <button onClick={copyAddress} className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors" data-testid="copy-wallet-btn">
+                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-gray-400" />}
+                  </button>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-white font-semibold">{connectedWallet?.name || 'Wallet'}</h3>
-              <p className="text-emerald-400 text-xs sm:text-sm font-mono break-all">{walletAddress}</p>
+            <div className="rounded-xl p-4 mb-4" style={{ background: '#0c1120' }}>
+              <div className="flex justify-between text-sm mb-2"><span className="text-gray-400">Status</span><span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Connected</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-400">Network</span><span className="text-white">{connectedWallet?.chains?.join(', ') || 'EVM'}</span></div>
             </div>
+            <button onClick={onDisconnectWallet} className="w-full py-2.5 rounded-xl border border-red-500/30 text-red-400 text-sm hover:bg-red-500/10 transition-colors">Disconnect Wallet</button>
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-20 h-20 rounded-2xl bg-gray-800/60 flex items-center justify-center mx-auto mb-4">
+              <Wallet className="w-10 h-10 text-gray-500" />
+            </div>
+            <h3 className="text-white font-semibold text-lg mb-2">No Wallet Connected</h3>
+            <p className="text-gray-400 text-sm mb-6">Connect your crypto wallet to start trading.</p>
+            <button onClick={onConnectWallet} className="px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors">Connect Wallet</button>
           </div>
-          <div className="rounded-xl p-4 mb-4" style={{ background: '#0c1120' }}>
-            <div className="flex justify-between text-sm mb-2"><span className="text-gray-400">Status</span><span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Connected</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-400">Network</span><span className="text-white">{connectedWallet?.chains?.join(', ') || 'EVM'}</span></div>
-          </div>
-          <button onClick={onDisconnectWallet} className="w-full py-2.5 rounded-xl border border-red-500/30 text-red-400 text-sm hover:bg-red-500/10 transition-colors">Disconnect Wallet</button>
-        </>
-      ) : (
-        <div className="text-center py-8">
-          <div className="w-20 h-20 rounded-2xl bg-gray-800/60 flex items-center justify-center mx-auto mb-4">
-            <Wallet className="w-10 h-10 text-gray-500" />
-          </div>
-          <h3 className="text-white font-semibold text-lg mb-2">No Wallet Connected</h3>
-          <p className="text-gray-400 text-sm mb-6">Connect your crypto wallet to start trading.</p>
-          <button onClick={onConnectWallet} className="px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors">Connect Wallet</button>
-        </div>
-      )}
-    </Card>
-  </PageShell>
-);
+        )}
+      </Card>
+    </PageShell>
+  );
+};
 
 // ========== WITHDRAWAL ACCOUNT ==========
 export const WithdrawalAccountPage = ({ onBack }) => {
