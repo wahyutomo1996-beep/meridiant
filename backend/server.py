@@ -18,13 +18,25 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Runtime config
+APP_ENV = os.environ.get('APP_ENV', os.environ.get('ENVIRONMENT', 'development')).lower()
+IS_PRODUCTION = APP_ENV in {'production', 'prod'}
+
 # MongoDB
-mongo_url = os.environ['MONGO_URL']
+mongo_url = os.environ.get('MONGO_URL')
+if not mongo_url:
+    if IS_PRODUCTION:
+        raise RuntimeError('MONGO_URL is required in production')
+    mongo_url = 'mongodb://localhost:27017'
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get('DB_NAME', 'meridiant_db')]
 
 # JWT Config
-SECRET_KEY = os.environ.get('JWT_SECRET', 'meridiant-secret-key-2025-production')
+SECRET_KEY = os.environ.get('JWT_SECRET')
+if not SECRET_KEY:
+    if IS_PRODUCTION:
+        raise RuntimeError('JWT_SECRET is required in production')
+    SECRET_KEY = 'meridiant-dev-secret-change-me'
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
@@ -60,6 +72,7 @@ class UserResponse(BaseModel):
     id: str
     name: str
     email: str
+    is_admin: bool = False
     wallet_connected: bool = False
     wallet_address: Optional[str] = None
     wallet_name: Optional[str] = None
@@ -267,7 +280,7 @@ async def signup(data: UserSignUp):
     token = create_token(user_id)
     return AuthResponse(
         token=token,
-        user=UserResponse(id=user_id, name=data.name, email=data.email.lower())
+        user=UserResponse(id=user_id, name=data.name, email=data.email.lower(), is_admin=False)
     )
 
 @api_router.post("/auth/signin", response_model=AuthResponse)
@@ -285,6 +298,7 @@ async def signin(data: UserSignIn):
             wallet_name=user.get("wallet_name"),
             auth_type=user.get("auth_type", "email"),
             picture=user.get("picture"),
+            is_admin=bool(user.get("is_admin", False) or user.get("email") == ADMIN_EMAIL),
         )
     )
 
@@ -329,6 +343,7 @@ async def google_auth(data: GoogleAuthRequest):
             "wallet_name": None,
             "auth_type": "google",
             "picture": picture,
+            "is_admin": False,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
         wallet_connected = False
@@ -347,6 +362,7 @@ async def google_auth(data: GoogleAuthRequest):
             "wallet_name": wallet_name,
             "auth_type": "google",
             "picture": picture,
+            "is_admin": bool((existing and existing.get("is_admin", False)) or email == ADMIN_EMAIL),
         }
     }
 
@@ -424,6 +440,7 @@ async def get_wallet_balances(address: str):
 async def get_me(user=Depends(get_current_user)):
     return {
         "id": user["_id"], "name": user["name"], "email": user["email"],
+        "is_admin": bool(user.get("is_admin", False) or user.get("email") == ADMIN_EMAIL),
         "wallet_connected": user.get("wallet_connected", False),
         "wallet_address": user.get("wallet_address"),
         "wallet_name": user.get("wallet_name"),
@@ -593,11 +610,11 @@ CHATBOT_SYSTEM = """Kamu adalah asisten customer service Meridiant, platform tra
 
 Informasi tentang Meridiant:
 - Platform transfer crypto on-chain dan withdraw off-chain (crypto ke fiat)
-- Mendukung blockchain: BNB Chain (BSC), Polygon, Solana, Ethereum, Arbitrum, Optimism, Base, Avalanche
+- Mendukung blockchain: Ethereum, Base, Arbitrum, Optimism, BNB Chain (BSC), Polygon, Solana, Avalanche, dan TON
 - Token yang didukung: IDRT, USDT, USDC, ETH, BNB, SOL, MATIC, dan lainnya
 - Wallet yang didukung: MetaMask, OKX Wallet, Phantom, Solflare
 - Login via email/password atau Google OAuth
-- Biaya: Hanya gas fee jaringan blockchain, Meridiant tidak mengenakan biaya tambahan
+- Biaya: gas fee jaringan blockchain, trade fee 0.3% untuk pembelian IDR ke crypto, dan platform fee 0.2% untuk transaksi IDR minimal Rp 50.000
 - Transfer dilakukan langsung di blockchain (on-chain), aman dan transparan
 - Setiap transaksi bisa diverifikasi di block explorer
 
@@ -649,7 +666,7 @@ async def chat_endpoint(data: ChatMessage):
 
 async def get_admin_user(request: Request):
     user = await get_current_user(request)
-    if user.get("email") != ADMIN_EMAIL:
+    if not (user.get("is_admin") or user.get("email") == ADMIN_EMAIL):
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
@@ -792,6 +809,10 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def seed_test_user():
+    if IS_PRODUCTION and os.environ.get("SEED_DEMO_USERS") != "true":
+        logger.info("Skipping demo user seeding in production")
+        return
+
     existing = await db.users.find_one({"email": "test@meridiant.com"})
     if not existing:
         user_id = str(uuid.uuid4())

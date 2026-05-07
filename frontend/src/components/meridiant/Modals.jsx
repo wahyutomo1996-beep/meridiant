@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Eye, EyeOff, Loader2, Check, Search, Wallet2, Hexagon, Shield, Flame, Layers, ExternalLink } from 'lucide-react';
-import { wallets, QRIS_IMAGE } from '@/data/mockData';
-import { sendERC20Transfer, sendNativeTransfer, sendSolanaTransfer, isOnChainSupported } from '@/lib/onchain';
+import { Eye, EyeOff, Loader2, Check, Search, Wallet2, Hexagon, Shield, Flame, Layers } from 'lucide-react';
+import { wallets, QRIS_IMAGE, TRADE_FEE_RATE, PLATFORM_FEE_RATE, PLATFORM_FEE_THRESHOLD } from '@/data/mockData';
+import { sendERC20Transfer, sendNativeTransfer, sendSolanaTransfer, isNativeToken, isOnChainSupported } from '@/lib/onchain';
+import ChainLogo from './ChainLogo';
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
@@ -301,10 +302,9 @@ export const SignUpModal = ({ open, onClose, onSignUp, onGoogleCredential, onSwi
 };
 
 // ========== CHECKOUT MODAL (with on-chain support) ==========
-export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, connectedWallet }) => {
+export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, connectedWallet, externalError }) => {
   const [sending, setSending] = useState(false);
   const [txError, setTxError] = useState('');
-  const [txResult, setTxResult] = useState(null);
 
   if (!data) return null;
 
@@ -313,6 +313,13 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
   const chain = fromCurrency?.chain;
   const tokenCode = fromCurrency?.code;
   const canOnChain = chain && isOnChainSupported(chain, tokenCode);
+  const fromAmountNumber = parseFloat(String(data.from?.amount || '0').replace(/,/g, '')) || 0;
+  const methodFee = data.method?.fee || data.destination?.fee || 0;
+  const tradeFee = data.type === 'transfer' && data.from?.currency?.code === 'IDR' ? Math.round(fromAmountNumber * TRADE_FEE_RATE) : 0;
+  const platformFee = data.type === 'transfer' && data.from?.currency?.code === 'IDR' && fromAmountNumber >= PLATFORM_FEE_THRESHOLD
+    ? Math.round(fromAmountNumber * PLATFORM_FEE_RATE)
+    : 0;
+  const totalFee = tradeFee + platformFee + methodFee;
 
   const handleOnChainTransfer = async () => {
     setSending(true); setTxError('');
@@ -320,15 +327,12 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
       let result;
       if (chain === 'Solana') {
         result = await sendSolanaTransfer(tokenCode, data.from.amount);
-      } else if (tokenCode === 'BNB' && chain === 'BSC') {
-        result = await sendNativeTransfer(chain, data.from.amount);
-      } else if (tokenCode === 'MATIC' && chain === 'Polygon') {
+      } else if (isNativeToken(chain, tokenCode)) {
         result = await sendNativeTransfer(chain, data.from.amount);
       } else {
         result = await sendERC20Transfer(chain, tokenCode, data.from.amount);
       }
-      setTxResult(result);
-      onConfirm(result);
+      await onConfirm(result);
     } catch (err) {
       setTxError(err.message || 'Transaction failed');
     } finally {
@@ -336,12 +340,20 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
     }
   };
 
-  const handleRegularConfirm = () => {
-    onConfirm(null);
+  const handleRegularConfirm = async () => {
+    setSending(true);
+    setTxError('');
+    try {
+      await onConfirm(null);
+    } catch (err) {
+      setTxError(err.response?.data?.detail || err.message || 'Failed to save transaction. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!sending) { setTxError(''); setTxResult(null); onClose(v); } }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!sending) { setTxError(''); onClose(v); } }}>
       <DialogContent className="sm:max-w-lg border-gray-700/50" style={{ background: '#1a2235' }}>
         <DialogHeader>
           <div className="flex items-center justify-between">
@@ -355,8 +367,16 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
             <div className="flex justify-between text-sm"><span className="text-gray-400">Transaction ID</span><span className="text-white font-mono text-xs">{txId}</span></div>
             <div className="flex justify-between text-sm"><span className="text-gray-400">Amount to send</span><span className="text-white">{data.from?.amount} {data.from?.currency?.displayCode || data.from?.currency?.code}</span></div>
             <div className="flex justify-between text-sm"><span className="text-gray-400">You'll receive</span><span className="text-emerald-400">{data.to?.amount} {data.to?.currency?.displayCode || data.to?.currency?.code}</span></div>
-            {chain && <div className="flex justify-between text-sm"><span className="text-gray-400">Network</span><span className="text-blue-400">{chain}</span></div>}
-            <div className="flex justify-between text-sm"><span className="text-gray-400">Fee</span><span className="text-white">0.5%</span></div>
+            {chain && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Network</span>
+                <span className="inline-flex items-center gap-1.5 text-blue-400"><ChainLogo chain={chain} size={16} showAlt={false} />{chain}</span>
+              </div>
+            )}
+            {tradeFee > 0 && <div className="flex justify-between text-sm"><span className="text-gray-400">Trade fee (0.3%)</span><span className="text-white">Rp {tradeFee.toLocaleString('id-ID')}</span></div>}
+            {platformFee > 0 && <div className="flex justify-between text-sm"><span className="text-gray-400">Platform fee (0.2%)</span><span className="text-white">Rp {platformFee.toLocaleString('id-ID')}</span></div>}
+            {methodFee > 0 && <div className="flex justify-between text-sm"><span className="text-gray-400">Method fee</span><span className="text-white">Rp {methodFee.toLocaleString('id-ID')}</span></div>}
+            <div className="flex justify-between text-sm"><span className="text-gray-400">Total fee</span><span className="text-white">{totalFee === 0 ? 'Gratis' : `Rp ${totalFee.toLocaleString('id-ID')}`}</span></div>
             <div className="border-t border-gray-700/40 pt-3 flex justify-between text-sm"><span className="text-gray-400">Total</span><span className="text-white font-medium">{data.from?.amount} {data.from?.currency?.displayCode || data.from?.currency?.code}</span></div>
           </div>
 
@@ -365,7 +385,7 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
               <h4 className="text-emerald-400 text-sm font-medium mb-2 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> On-Chain Transfer
               </h4>
-              <p className="text-gray-400 text-xs mb-1">This transaction will be executed on <span className="text-white">{chain}</span> blockchain.</p>
+              <p className="text-gray-400 text-xs mb-1">This transaction will be executed on <span className="inline-flex items-center gap-1 text-white"><ChainLogo chain={chain} size={14} showAlt={false} />{chain}</span> blockchain.</p>
               <p className="text-gray-500 text-xs">Your wallet will prompt you to sign the transaction.</p>
             </div>
           )}
@@ -385,17 +405,8 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
             </div>
           )}
 
-          {txError && <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{txError}</div>}
+          {(txError || externalError) && <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm">{txError || externalError}</div>}
 
-          {txResult && (
-            <div className="rounded-xl p-4 border border-emerald-500/30" style={{ background: 'rgba(16,185,129,0.08)' }}>
-              <p className="text-emerald-400 text-sm font-medium mb-2">Transaction submitted!</p>
-              <a href={txResult.blockExplorer} target="_blank" rel="noopener noreferrer"
-                className="text-blue-400 text-xs hover:underline flex items-center gap-1">
-                View on explorer <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          )}
 
           {canOnChain ? (
             <button onClick={handleOnChainTransfer} disabled={sending} data-testid="onchain-confirm"
@@ -403,9 +414,9 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
               {sending ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing transaction...</> : 'Sign & Send On-Chain'}
             </button>
           ) : (
-            <button onClick={handleRegularConfirm} data-testid="regular-confirm"
-              className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors">
-              Confirm and pay
+            <button onClick={handleRegularConfirm} disabled={sending} data-testid="regular-confirm"
+              className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+              {sending ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving transaction...</> : 'Confirm and pay'}
             </button>
           )}
         </div>

@@ -170,7 +170,7 @@ const Navbar = ({
                 )}
 
                 <div className="p-3 space-y-1">
-                  {user?.email === 'admin@meridiant.com' && (
+                  {user?.is_admin && (
                     <button
                       onClick={() => { setShowDropdown(false); navigate('admin'); }}
                       data-testid="nav-admin"
@@ -298,7 +298,7 @@ const Navbar = ({
                 )}
 
                 <div className="space-y-2">
-                  {user?.email === 'admin@meridiant.com' && (
+                  {user?.is_admin && (
                     <button
                       onClick={() => navigate('admin')}
                       data-testid="mobile-nav-admin"
