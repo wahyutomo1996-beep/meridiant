@@ -14,10 +14,11 @@ import {
 } from "@/components/meridiant/Modals";
 import { MyProfilePage, WalletAccountPage, WithdrawalAccountPage, HistoryTransactionsPage } from "@/components/meridiant/ProfilePages";
 import { authAPI, walletAPI, pricesAPI } from "@/lib/api";
-import { exchangeRates as fallbackRates } from "@/data/mockData";
+import { chainNetworks, exchangeRates as fallbackRates } from "@/data/mockData";
 import { Shield, Zap, Globe, ChevronDown, ChevronUp, Sun, Moon } from "lucide-react";
 import ChatbotWidget from "@/components/meridiant/ChatbotWidget";
 import AdminDashboard from "@/components/meridiant/AdminDashboard";
+import ChainLogo from "@/components/meridiant/ChainLogo";
 
 // ========== HERO SECTION ==========
 const HeroSection = ({ onGetStarted }) => {
@@ -34,6 +35,14 @@ const HeroSection = ({ onGetStarted }) => {
         <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" /> Instan</span>
         <span className="flex items-center gap-1.5"><Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" /> Aman</span>
         <span className="flex items-center gap-1.5"><Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" /> Multi-Chain</span>
+      </div>
+      <div className="anim-fade-up-d3 mt-4 flex items-center justify-center gap-2 flex-wrap" aria-label="Supported blockchain networks">
+        {chainNetworks.map(chain => (
+          <span key={chain.id} className="chain-pill inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] sm:text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <ChainLogo chain={chain.id} size={16} showAlt={false} />
+            {chain.shortName}
+          </span>
+        ))}
       </div>
     </div>
   );
@@ -53,7 +62,7 @@ const FAQPage = ({ onBack }) => {
     },
     {
       q: "Blockchain apa saja yang didukung?",
-      a: "Saat ini kami mendukung BNB Smart Chain (BSC), Polygon, Solana, Ethereum, Arbitrum, Optimism, Base, dan Avalanche."
+      a: "Transfer on-chain langsung saat ini tersedia untuk Ethereum, Base, Arbitrum, Optimism, BNB Smart Chain (BSC), Polygon, dan SOL di Solana. TON/Toncoin tersedia sebagai aset dan jaringan tujuan; direct signing TON akan dibuka bertahap."
     },
     {
       q: "Token apa saja yang bisa ditransfer?",
@@ -65,7 +74,7 @@ const FAQPage = ({ onBack }) => {
     },
     {
       q: "Berapa biaya transaksi?",
-      a: "Biaya transaksi hanya berupa gas fee dari jaringan blockchain yang Anda gunakan. Meridiant tidak mengenakan biaya tambahan untuk transfer on-chain."
+      a: "Biaya terdiri dari gas fee jaringan untuk transaksi on-chain, trade fee 0.3% untuk pembelian IDR ke crypto, dan platform fee 0.2% untuk transaksi IDR mulai Rp 50.000. Biaya metode withdraw ditampilkan sebelum konfirmasi."
     },
     {
       q: "Wallet apa yang didukung?",
@@ -128,6 +137,7 @@ function AppContent() {
   const [theme, setTheme] = useState(() => localStorage.getItem('mrd-theme') || 'dark');
   const [liveRates, setLiveRates] = useState(fallbackRates);
   const [realBalances, setRealBalances] = useState(null);
+  const [checkoutError, setCheckoutError] = useState('');
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => {
@@ -142,7 +152,7 @@ function AppContent() {
   }, [theme]);
 
   const handleAuthSuccess = useCallback((u) => {
-    setUser({ name: u.name, email: u.email, picture: u.picture });
+    setUser({ name: u.name, email: u.email, picture: u.picture, is_admin: !!u.is_admin });
     setIsLoggedIn(true);
     if (u.wallet_connected) {
       setWalletConnected(true);
@@ -261,12 +271,13 @@ function AppContent() {
     if (!isLoggedIn) { setActiveModal("signin"); return; }
     if (!walletConnected) { setActiveModal("wallet"); return; }
     if (!data.from.amount || parseFloat(data.from.amount) <= 0) return;
+    setCheckoutError('');
     setTransactionData(data);
     setActiveModal("checkout");
   };
 
   const handleConfirmTransaction = async (onChainResult) => {
-    setActiveModal("processing");
+    setCheckoutError('');
     try {
       if (transactionData) {
         const { transactionAPI } = await import("@/lib/api");
@@ -281,13 +292,20 @@ function AppContent() {
           chain: onChainResult?.chain || null,
         });
       }
-    } catch { /* ignore */ }
+    } catch (err) {
+      const message = err.response?.data?.detail || err.message || 'Failed to save transaction. Please try again.';
+      setCheckoutError(message);
+      setActiveModal("checkout");
+      throw err;
+    }
+    setActiveModal("processing");
     setTimeout(() => setActiveModal("complete"), onChainResult ? 500 : 3000);
   };
 
   const handleTransactionComplete = () => {
     setActiveModal(null);
     setTransactionData(null);
+    setCheckoutError('');
   };
 
   const isHomePage = currentPage === 'home';
@@ -366,6 +384,7 @@ function AppContent() {
         open={activeModal === "checkout"} onClose={() => setActiveModal(null)}
         data={transactionData} onConfirm={handleConfirmTransaction}
         walletAddress={walletAddress} connectedWallet={connectedWallet}
+        externalError={checkoutError}
       />
       <ProcessingModal open={activeModal === "processing"} />
       <CompleteModal open={activeModal === "complete"} onClose={handleTransactionComplete} data={transactionData} />

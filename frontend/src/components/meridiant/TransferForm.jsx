@@ -1,25 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, Search, Building2, Smartphone, QrCode, X, TrendingUp, Clock, Check, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
+import ChainLogo from './ChainLogo';
 import {
   fiatCurrencies, cryptoCurrencies, transferMethodGroups,
-  withdrawDestGroups, exchangeRates, chainLogos, mockBalances, MIN_AMOUNT_IDR,
+  withdrawDestGroups, exchangeRates, chainNetworks, mockBalances, MIN_AMOUNT_IDR,
   TRADE_FEE_RATE, PLATFORM_FEE_RATE, PLATFORM_FEE_THRESHOLD
 } from '@/data/mockData';
 
-const networks = [
-  { id: 'all', name: 'All networks', color: null },
-  { id: 'Ethereum', name: 'Ethereum', color: '#627EEA' },
-  { id: 'Base', name: 'Base', color: '#0052FF' },
-  { id: 'Arbitrum', name: 'Arbitrum', color: '#28A0F0' },
-  { id: 'Optimism', name: 'Optimism', color: '#FF0420' },
-  { id: 'BSC', name: 'BNB Chain', color: '#F0B90B' },
-  { id: 'Solana', name: 'Solana', color: '#9945FF' },
-  { id: 'Polygon', name: 'Polygon', color: '#8247E5' },
-  { id: 'Avalanche', name: 'Avalanche', color: '#E84142' },
-  { id: 'Bitcoin', name: 'Bitcoin', color: '#F7931A' },
-  { id: 'TON', name: 'TON', color: '#0098EA' },
-];
+const networks = [{ id: 'all', name: 'All networks', color: null }, ...chainNetworks];
 
 const popularTokenCodes = ['ETH', 'USDC', 'USDT', 'WBTC', 'SOL', 'TON'];
 
@@ -55,6 +44,25 @@ const CryptoIcon = ({ token, size = 20 }) => {
 };
 
 const categoryIcons = { 'Bank Transfer': Building2, 'Bank': Building2, 'E-Wallet': Smartphone, 'QRIS': QrCode };
+
+const getCurrencyKey = (currency) => currency?.displayCode || currency?.code || '';
+
+const getLiveIdrValue = (currency, amount, liveRates) => {
+  const idrRate = liveRates?.[`${getCurrencyKey(currency)}_IDR`] || 0;
+  return amount * idrRate;
+};
+
+const sortByPortfolioValue = (tokens, balances, liveRates) => [...tokens].sort((a, b) => {
+  const balA = getTokenBalance(a, balances?.real, balances?.mock);
+  const balB = getTokenBalance(b, balances?.real, balances?.mock);
+
+  if (balA.amount > 0 && balB.amount <= 0) return -1;
+  if (balA.amount <= 0 && balB.amount > 0) return 1;
+  if (balA.amount <= 0 && balB.amount <= 0) return 0;
+
+  return getLiveIdrValue(b, balB.amount, liveRates) - getLiveIdrValue(a, balA.amount, liveRates);
+});
+
 
 // Smart number formatter - clean output without trailing zeros
 const formatAmount = (value, isFiat = false) => {
@@ -101,9 +109,8 @@ const getTokenBalance = (token, realBalances, mockBal) => {
 
 // Token row component used in both "My Assets" and full list
 const TokenRow = ({ c, isSelected, balance, liveRates, onSelect, showChain = true }) => {
-  const key = c.displayCode || c.code;
-  const idrRate = liveRates?.[`${key}_IDR`] || 0;
-  const idrValue = balance.amount * idrRate;
+  const key = getCurrencyKey(c);
+  const idrValue = getLiveIdrValue(c, balance.amount, liveRates);
 
   return (
     <button onClick={() => onSelect(c)}
@@ -111,8 +118,8 @@ const TokenRow = ({ c, isSelected, balance, liveRates, onSelect, showChain = tru
       className={`flex items-center gap-3.5 w-full px-5 py-3 hover:bg-white/5 transition-colors ${isSelected ? 'bg-emerald-500/8' : ''}`}>
       <div className="relative flex-shrink-0">
         <CryptoIcon token={c} size={36} />
-        {c.chain && chainLogos[c.chain] && (
-          <img src={chainLogos[c.chain]} alt="" className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#111827]" />
+        {c.chain && (
+          <ChainLogo chain={c.chain} size={16} showAlt={false} className="absolute -bottom-0.5 -right-0.5 border-2 border-[#111827]" />
         )}
       </div>
       <div className="text-left flex-1 min-w-0">
@@ -120,7 +127,10 @@ const TokenRow = ({ c, isSelected, balance, liveRates, onSelect, showChain = tru
         <div className="flex items-center gap-2">
           <span className="text-gray-400 text-xs">{key}</span>
           {showChain && c.chain && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700/60 text-gray-400">{c.chain}</span>
+            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700/60 text-gray-400">
+              <ChainLogo chain={c.chain} size={12} showAlt={false} />
+              {c.chain}
+            </span>
           )}
         </div>
       </div>
@@ -155,18 +165,8 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
   // Tokens with balance > 0 (my assets)
   const myAssets = useMemo(() => {
     if (!walletConnected) return [];
-    return currencies.filter(c => {
-      const bal = getTokenBalance(c, balances?.real, balances?.mock);
-      return bal.amount > 0;
-    }).sort((a, b) => {
-      const balA = getTokenBalance(a, balances?.real, balances?.mock);
-      const balB = getTokenBalance(b, balances?.real, balances?.mock);
-      const keyA = a.displayCode || a.code;
-      const keyB = b.displayCode || b.code;
-      const idrA = balA.amount * (liveRates?.[`${keyA}_IDR`] || 0);
-      const idrB = balB.amount * (liveRates?.[`${keyB}_IDR`] || 0);
-      return idrB - idrA;
-    });
+    const assets = currencies.filter(c => getTokenBalance(c, balances?.real, balances?.mock).amount > 0);
+    return sortByPortfolioValue(assets, balances, liveRates);
   }, [currencies, balances, walletConnected, liveRates]);
 
   const filtered = useMemo(() => {
@@ -183,30 +183,20 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
     }
     // Sort: tokens with balance first
     if (walletConnected && balances) {
-      list = [...list].sort((a, b) => {
-        const balA = getTokenBalance(a, balances.real, balances.mock);
-        const balB = getTokenBalance(b, balances.real, balances.mock);
-        if (balA.amount > 0 && balB.amount <= 0) return -1;
-        if (balA.amount <= 0 && balB.amount > 0) return 1;
-        if (balA.amount > 0 && balB.amount > 0) {
-          const keyA = a.displayCode || a.code;
-          const keyB = b.displayCode || b.code;
-          const idrA = balA.amount * (liveRates?.[`${keyA}_IDR`] || 0);
-          const idrB = balB.amount * (liveRates?.[`${keyB}_IDR`] || 0);
-          return idrB - idrA;
-        }
-        return 0;
-      });
+      list = sortByPortfolioValue(list, balances, liveRates);
     }
     return list;
   }, [currencies, selectedNetwork, search, walletConnected, balances, liveRates]);
 
-  const handleSelect = (c) => { onSelect(c); onClose(); setSearch(''); setSelectedNetwork('all'); };
+  const resetSelector = () => { setSearch(''); setSelectedNetwork('all'); setShowNetworks(false); };
+  const handleSelect = (c) => { onSelect(c); onClose(); resetSelector(); };
+  const handleClose = () => { resetSelector(); onClose(); };
+  const handleOpenChange = (isOpen) => { if (!isOpen) handleClose(); };
   const currentNet = networks.find(n => n.id === selectedNetwork);
 
   if (type === 'fiat') {
     return (
-      <Dialog open={open} onOpenChange={() => { setSearch(''); onClose(); }}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-sm border-gray-700/50 p-0" style={{ background: '#111827' }}>
           <DialogTitle className="p-5 pb-3 text-white text-lg font-semibold">Select currency</DialogTitle>
           <div className="pb-3 max-h-[300px] overflow-y-auto custom-scrollbar">
@@ -224,11 +214,11 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
   }
 
   return (
-    <Dialog open={open} onOpenChange={() => { setSearch(''); setSelectedNetwork('all'); onClose(); }}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md border-gray-700/50 p-0 gap-0 max-h-[85vh] sm:max-h-[85vh] h-[100dvh] sm:h-auto flex flex-col [&>button]:hidden sm:rounded-2xl rounded-none" style={{ background: '#111827' }}>
         <div className="flex items-center justify-between p-5 pb-3 flex-shrink-0">
           <DialogTitle className="text-white text-lg font-semibold">Select a token</DialogTitle>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
+          <button onClick={handleClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
             <X className="w-4 h-4 text-gray-400" />
           </button>
         </div>
@@ -241,8 +231,8 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
             <div className="relative flex-shrink-0">
               <button onClick={() => setShowNetworks(!showNetworks)}
                 className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">
-                {currentNet?.id !== 'all' && chainLogos[currentNet?.id] ? (
-                  <img src={chainLogos[currentNet.id]} alt="" className="w-5 h-5 rounded-full" />
+                {currentNet?.id !== 'all' ? (
+                  <ChainLogo chain={currentNet.id} size={20} showAlt={false} />
                 ) : (
                   <div className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500" />
                 )}
@@ -253,8 +243,9 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
                   {networks.map(n => (
                     <button key={n.id} onClick={() => { setSelectedNetwork(n.id); setShowNetworks(false); }}
                       className={`flex items-center gap-3 w-full px-4 py-2.5 hover:bg-white/5 text-sm ${selectedNetwork === n.id ? 'bg-emerald-500/10' : ''}`}>
-                      {chainLogos[n.id] ? <img src={chainLogos[n.id]} alt="" className="w-5 h-5 rounded-full" />
-                        : <div className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500" />}
+                      {n.id === 'all'
+                        ? <div className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500" />
+                        : <ChainLogo chain={n.id} size={20} showAlt={false} />}
                       <span className="text-white flex-1 text-left">{n.name}</span>
                       {selectedNetwork === n.id && <span className="text-emerald-400 text-xs font-bold">✓</span>}
                     </button>
@@ -275,8 +266,8 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
             </div>
             <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
               {myAssets.map((c, i) => {
-                const key = c.displayCode || c.code;
-                const isSelected = (selected.displayCode || selected.code) === key;
+                const key = getCurrencyKey(c);
+                const isSelected = getCurrencyKey(selected) === key;
                 const balance = getTokenBalance(c, balances?.real, balances?.mock);
                 return (
                   <TokenRow key={`asset-${key}-${i}`} c={c} isSelected={isSelected} balance={balance}
@@ -292,11 +283,14 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
         {popularTokens.length > 0 && selectedNetwork === 'all' && !search && !(walletConnected && myAssets.length > 0) && (
           <div className="px-5 pb-3 flex gap-2 flex-wrap flex-shrink-0">
             {popularTokens.map((t, i) => {
-              const isActive = (selected.displayCode || selected.code) === (t.displayCode || t.code);
+              const isActive = getCurrencyKey(selected) === getCurrencyKey(t);
               return (
                 <button key={t.code + i} onClick={() => handleSelect(t)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${isActive ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-gray-700/40 hover:border-gray-600/60 bg-gray-800/40'}`}>
-                  <CryptoIcon token={t} size={20} />
+                  <span className="relative">
+                    <CryptoIcon token={t} size={20} />
+                    {t.chain && <ChainLogo chain={t.chain} size={10} showAlt={false} className="absolute -bottom-0.5 -right-1 border border-[#111827]" />}
+                  </span>
                   <span className="text-white text-xs font-medium">{t.code}</span>
                 </button>
               );
@@ -314,8 +308,8 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
             <p className="text-gray-500 text-sm text-center py-8">No tokens found</p>
           ) : (
             filtered.map((c, i) => {
-              const key = c.displayCode || c.code;
-              const isSelected = (selected.displayCode || selected.code) === key;
+              const key = getCurrencyKey(c);
+              const isSelected = getCurrencyKey(selected) === key;
               const balance = walletConnected ? getTokenBalance(c, balances?.real, balances?.mock) : { amount: 0, isLive: false };
               return (
                 <TokenRow key={`list-${key}-${i}`} c={c} isSelected={isSelected} balance={balance}
@@ -351,7 +345,7 @@ const MethodPickerModal = ({ open, onClose, groups, selected, onSelect, title })
       <DialogContent className="sm:max-w-md border-gray-700/50 p-0 gap-0 max-h-[85vh] sm:max-h-[85vh] h-[100dvh] sm:h-auto flex flex-col [&>button]:hidden sm:rounded-2xl rounded-none" style={{ background: '#111827' }}>
         <div className="flex items-center justify-between p-5 pb-3 flex-shrink-0">
           <DialogTitle className="text-white text-lg font-semibold">{title}</DialogTitle>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
+          <button onClick={handleClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
             <X className="w-4 h-4 text-gray-400" />
           </button>
         </div>
@@ -462,8 +456,8 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
   useEffect(() => {
     if (!fromAmount || isNaN(parseFloat(fromAmount))) { setToAmount(''); setAmountError(''); return; }
-    const fromKey = fromCurrency.displayCode || fromCurrency.code;
-    const toKey = toCurrency.displayCode || toCurrency.code;
+    const fromKey = getCurrencyKey(fromCurrency);
+    const toKey = getCurrencyKey(toCurrency);
     const rates = liveRates || exchangeRates;
     const rate = rates[`${fromKey}_${toKey}`];
     if (rate) {
@@ -523,8 +517,15 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
 
   const CurrencyBtn = ({ currency, type, onClick }) => (
     <button onClick={onClick} className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full hover:bg-gray-600/30 transition-colors flex-shrink-0" style={{ background: 'rgba(75,85,99,0.3)' }}>
-      {type === 'fiat' ? <FlagIcon colors={currency.flagColors} /> : <CryptoIcon token={currency} size={20} />}
-      <span className="text-xs sm:text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>{currency.displayCode || currency.code}</span>
+      {type === 'fiat' ? (
+        <FlagIcon colors={currency.flagColors} />
+      ) : (
+        <span className="relative flex-shrink-0">
+          <CryptoIcon token={currency} size={20} />
+          {currency.chain && <ChainLogo chain={currency.chain} size={10} showAlt={false} className="absolute -bottom-0.5 -right-1 border border-[#111827]" />}
+        </span>
+      )}
+      <span className="text-xs sm:text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>{getCurrencyKey(currency)}</span>
       <ChevronDown className="w-3 h-3 text-gray-400" />
     </button>
   );
@@ -565,7 +566,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
             <p className="text-gray-600 text-[11px] mt-1.5 px-1">Min. Rp {MIN_AMOUNT_IDR.toLocaleString()}</p>
           )}
           {activeTab === 'withdraw' && (() => {
-            const balKey = fromCurrency.displayCode || fromCurrency.code;
+            const balKey = getCurrencyKey(fromCurrency);
             const realBal = realBalances?.[balKey];
             const bal = realBal !== undefined && realBal !== null ? parseFloat(realBal) : (mockBalances[balKey] || 0);
             const isReal = realBal !== undefined && realBal !== null;
@@ -623,7 +624,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
           <div className="mb-4 rounded-xl px-3 sm:px-4 py-3 space-y-2" style={{ background: 'var(--card-inner)' }} data-testid="fee-estimation">
             <div className="flex items-center justify-between">
               <span className="text-gray-500 text-xs">Estimasi yang diterima</span>
-              <span className="text-emerald-400 text-xs sm:text-sm font-medium truncate ml-2">{toAmount || '0'} {toCurrency.displayCode || toCurrency.code}</span>
+              <span className="text-emerald-400 text-xs sm:text-sm font-medium truncate ml-2">{toAmount || '0'} {getCurrencyKey(toCurrency)}</span>
             </div>
             {activeTab === 'transfer' && tradeFee > 0 && (
               <div className="flex items-center justify-between">
@@ -656,7 +657,7 @@ const TransferForm = ({ isLoggedIn, walletConnected, walletAddress, connectedWal
         {(!fromAmount || parseFloat(fromAmount) <= 0) && (
           <div className="mb-4 rounded-xl px-3 sm:px-4 py-3" style={{ background: 'var(--card-inner)' }}>
             <p className="text-gray-400 text-xs sm:text-sm">
-              You'll receive an estimate of <span className="text-emerald-400 font-medium">0 {toCurrency.displayCode || toCurrency.code}</span> for <span className="text-emerald-400 font-medium">0 {fromCurrency.displayCode || fromCurrency.code}</span>
+              You'll receive an estimate of <span className="text-emerald-400 font-medium">0 {getCurrencyKey(toCurrency)}</span> for <span className="text-emerald-400 font-medium">0 {getCurrencyKey(fromCurrency)}</span>
             </p>
           </div>
         )}

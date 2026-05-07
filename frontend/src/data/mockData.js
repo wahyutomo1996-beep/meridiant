@@ -121,19 +121,22 @@ export const cryptoCurrencies = [
     logo: 'https://assets.coingecko.com/coins/images/325/small/Tether.png' },
 ];
 
-// Chain logos
-export const chainLogos = {
-  'Ethereum': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
-  'Base': 'https://assets.coingecko.com/asset_platforms/images/131/small/base.jpeg',
-  'Arbitrum': 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg',
-  'Optimism': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
-  'BSC': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
-  'Solana': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
-  'Polygon': 'https://assets.coingecko.com/coins/images/4713/small/polygon.png',
-  'Avalanche': 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png',
-  'Bitcoin': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
-  'TON': 'https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png',
+// Chain network metadata used across selectors, badges, and hero logos.
+export const chainMetadata = {
+  Ethereum: { name: 'Ethereum', shortName: 'ETH', color: '#627EEA', logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png' },
+  Base: { name: 'Base', shortName: 'BASE', color: '#0052FF', logo: 'https://assets.coingecko.com/asset_platforms/images/131/small/base.jpeg' },
+  Arbitrum: { name: 'Arbitrum', shortName: 'ARB', color: '#28A0F0', logo: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg' },
+  Optimism: { name: 'Optimism', shortName: 'OP', color: '#FF0420', logo: 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png' },
+  BSC: { name: 'BNB Chain', shortName: 'BSC', color: '#F0B90B', logo: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png' },
+  Solana: { name: 'Solana', shortName: 'SOL', color: '#9945FF', logo: 'https://assets.coingecko.com/coins/images/4128/small/solana.png' },
+  Polygon: { name: 'Polygon', shortName: 'POL', color: '#8247E5', logo: 'https://assets.coingecko.com/coins/images/4713/small/polygon.png' },
+  Avalanche: { name: 'Avalanche', shortName: 'AVAX', color: '#E84142', logo: 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png' },
+  Bitcoin: { name: 'Bitcoin', shortName: 'BTC', color: '#F7931A', logo: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png' },
+  TON: { name: 'TON', shortName: 'TON', color: '#0098EA', logo: 'https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png' },
 };
+
+export const chainNetworks = Object.entries(chainMetadata).map(([id, meta]) => ({ id, ...meta }));
+export const chainLogos = Object.fromEntries(Object.entries(chainMetadata).map(([id, meta]) => [id, meta.logo]));
 
 // Wallets with chain support
 export const wallets = [
