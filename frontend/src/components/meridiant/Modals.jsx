@@ -122,16 +122,16 @@ export const WalletConnectModal = ({ open, onClose, onConnect }) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) setSearch(''); onClose(v); }}>
-      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 overflow-hidden" style={{ background: '#111827' }}>
+      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 overflow-hidden" style={{ background: 'var(--modal-bg)' }}>
         <div className="pt-8 pb-4 px-6 text-center">
-          <div className="w-16 h-16 rounded-2xl border-2 border-gray-600/40 flex items-center justify-center mx-auto mb-5" style={{ background: '#1a2235' }}>
+          <div className="w-16 h-16 rounded-2xl border-2 border-gray-600/40 flex items-center justify-center mx-auto mb-5" style={{ background: 'var(--dropdown-bg)' }}>
             <Wallet2 className="w-7 h-7 text-gray-400" />
           </div>
           <DialogTitle className="text-white text-xl font-bold mb-1">Select your wallet</DialogTitle>
           <p className="text-gray-400 text-sm">Connect a wallet to your Meridiant account</p>
         </div>
         <div className="px-5 pb-3">
-          <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-gray-700/50" style={{ background: '#0c1120' }}>
+          <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-gray-700/50" style={{ background: 'var(--input-bg)' }}>
             <Search className="w-4 h-4 text-gray-500" />
             <input type="text" placeholder={`Search through ${wallets.length} wallets...`} value={search} onChange={e => setSearch(e.target.value)}
               className="bg-transparent text-white text-sm outline-none placeholder:text-gray-500 w-full" data-testid="wallet-search-input" />
@@ -188,7 +188,7 @@ export const SignInModal = ({ open, onClose, onSignIn, onGoogleCredential, onSwi
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) setError(''); onClose(v); }}>
-      <DialogContent className="sm:max-w-md border-gray-700/50" style={{ background: '#1a2235' }}>
+      <DialogContent className="sm:max-w-md border-gray-700/50" style={{ background: 'var(--dropdown-bg)' }}>
         <DialogHeader>
           <DialogTitle className="text-white text-xl">Sign in to Meridiant</DialogTitle>
           <p className="text-gray-400 text-sm mt-1">Enter your credentials to continue</p>
@@ -198,13 +198,13 @@ export const SignInModal = ({ open, onClose, onSignIn, onGoogleCredential, onSwi
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email" data-testid="signin-email"
-              className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
+              className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: 'var(--input-bg)' }} />
           </div>
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Password</label>
             <div className="relative">
               <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password" data-testid="signin-password"
-                className="w-full rounded-xl px-4 py-3 pr-10 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
+                className="w-full rounded-xl px-4 py-3 pr-10 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: 'var(--input-bg)' }} />
               <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
                 {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -220,7 +220,7 @@ export const SignInModal = ({ open, onClose, onSignIn, onGoogleCredential, onSwi
         </form>
         <div className="relative my-2">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-700/50" /></div>
-          <div className="relative flex justify-center text-xs"><span className="px-3 text-gray-500" style={{ background: '#1a2235' }}>OR</span></div>
+          <div className="relative flex justify-center text-xs"><span className="px-3 text-gray-500" style={{ background: 'var(--dropdown-bg)' }}>OR</span></div>
         </div>
         <GoogleSignInButton onCredential={onGoogleCredential} />
       </DialogContent>
@@ -251,7 +251,7 @@ export const SignUpModal = ({ open, onClose, onSignUp, onGoogleCredential, onSwi
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) setError(''); onClose(v); }}>
-      <DialogContent className="sm:max-w-md border-gray-700/50" style={{ background: '#1a2235' }}>
+      <DialogContent className="sm:max-w-md border-gray-700/50" style={{ background: 'var(--dropdown-bg)' }}>
         <DialogHeader>
           <DialogTitle className="text-white text-xl">Create your account</DialogTitle>
           <p className="text-gray-400 text-sm mt-1">Join Meridiant today</p>
@@ -261,18 +261,18 @@ export const SignUpModal = ({ open, onClose, onSignUp, onGoogleCredential, onSwi
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Full Name</label>
             <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your full name" data-testid="signup-name"
-              className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
+              className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: 'var(--input-bg)' }} />
           </div>
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email" data-testid="signup-email"
-              className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
+              className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: 'var(--input-bg)' }} />
           </div>
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Password</label>
             <div className="relative">
               <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Create a password" data-testid="signup-password"
-                className="w-full rounded-xl px-4 py-3 pr-10 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
+                className="w-full rounded-xl px-4 py-3 pr-10 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: 'var(--input-bg)' }} />
               <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
                 {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -281,7 +281,7 @@ export const SignUpModal = ({ open, onClose, onSignUp, onGoogleCredential, onSwi
           <div>
             <label className="text-gray-400 text-sm mb-1.5 block">Confirm Password</label>
             <input type="password" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} placeholder="Confirm your password" data-testid="signup-confirm-password"
-              className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: '#0c1120' }} />
+              className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-emerald-500/50" style={{ background: 'var(--input-bg)' }} />
           </div>
           <button type="submit" disabled={loading} data-testid="signup-submit"
             className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
@@ -293,7 +293,7 @@ export const SignUpModal = ({ open, onClose, onSignUp, onGoogleCredential, onSwi
         </form>
         <div className="relative my-2">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-700/50" /></div>
-          <div className="relative flex justify-center text-xs"><span className="px-3 text-gray-500" style={{ background: '#1a2235' }}>OR</span></div>
+          <div className="relative flex justify-center text-xs"><span className="px-3 text-gray-500" style={{ background: 'var(--dropdown-bg)' }}>OR</span></div>
         </div>
         <GoogleSignInButton onCredential={onGoogleCredential} />
       </DialogContent>
@@ -354,7 +354,7 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!sending) { setTxError(''); onClose(v); } }}>
-      <DialogContent className="sm:max-w-lg border-gray-700/50" style={{ background: '#1a2235' }}>
+      <DialogContent className="sm:max-w-lg border-gray-700/50" style={{ background: 'var(--dropdown-bg)' }}>
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-white text-lg">Checkout</DialogTitle>
@@ -362,7 +362,7 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
           </div>
         </DialogHeader>
         <div className="space-y-4 mt-2">
-          <div className="rounded-xl p-4 space-y-3" style={{ background: '#0c1120' }}>
+          <div className="rounded-xl p-4 space-y-3" style={{ background: 'var(--input-bg)' }}>
             <h4 className="text-gray-400 text-sm font-medium">Detail transaction</h4>
             <div className="flex justify-between text-sm"><span className="text-gray-400">Transaction ID</span><span className="text-white font-mono text-xs">{txId}</span></div>
             <div className="flex justify-between text-sm"><span className="text-gray-400">Amount to send</span><span className="text-white">{data.from?.amount} {data.from?.currency?.displayCode || data.from?.currency?.code}</span></div>
@@ -391,7 +391,7 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
           )}
 
           {!canOnChain && (
-            <div className="rounded-xl p-4" style={{ background: '#0c1120' }}>
+            <div className="rounded-xl p-4" style={{ background: 'var(--input-bg)' }}>
               <h4 className="text-gray-400 text-sm font-medium mb-2">How to pay</h4>
               <p className="text-white text-sm">{data.method?.name || data.destination?.name || 'Bank Transfer'}</p>
               {(data.method?.id === 'qris' || data.destination?.id === 'qris_withdraw') && (
@@ -428,7 +428,7 @@ export const CheckoutModal = ({ open, onClose, data, onConfirm, walletAddress, c
 // ========== PROCESSING MODAL ==========
 export const ProcessingModal = ({ open }) => (
   <Dialog open={open} onOpenChange={() => {}}>
-    <DialogContent className="sm:max-w-md border-gray-700/50 [&>button]:hidden" style={{ background: '#1a2235' }}>
+    <DialogContent className="sm:max-w-md border-gray-700/50 [&>button]:hidden" style={{ background: 'var(--dropdown-bg)' }}>
       <div className="text-center py-8">
         <div className="w-16 h-16 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin mx-auto mb-6" />
         <DialogTitle className="text-white text-lg font-medium mb-2">Transaction in progress</DialogTitle>
@@ -441,7 +441,7 @@ export const ProcessingModal = ({ open }) => (
 // ========== COMPLETE MODAL ==========
 export const CompleteModal = ({ open, onClose, data }) => (
   <Dialog open={open} onOpenChange={onClose}>
-    <DialogContent className="sm:max-w-md border-gray-700/50" style={{ background: '#1a2235' }}>
+    <DialogContent className="sm:max-w-md border-gray-700/50" style={{ background: 'var(--dropdown-bg)' }}>
       <div className="text-center py-6">
         <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
           <Check className="w-8 h-8 text-emerald-400" />
@@ -449,7 +449,7 @@ export const CompleteModal = ({ open, onClose, data }) => (
         <p className="text-gray-400 text-sm mb-1">Transaction submitted</p>
         <DialogTitle className="text-white text-lg font-medium mb-6">Yay! Your {data?.type === 'transfer' ? 'transfer' : 'withdrawal'} is completed!</DialogTitle>
         {data && (
-          <div className="rounded-xl p-4 text-left mb-5" style={{ background: '#0c1120' }}>
+          <div className="rounded-xl p-4 text-left mb-5" style={{ background: 'var(--input-bg)' }}>
             <div className="space-y-2">
               <div className="flex justify-between text-sm"><span className="text-gray-400">Sent</span><span className="text-white">{data.from?.amount} {data.from?.currency?.displayCode || data.from?.currency?.code}</span></div>
               <div className="flex justify-between text-sm"><span className="text-gray-400">Received</span><span className="text-emerald-400">{data.to?.amount} {data.to?.currency?.displayCode || data.to?.currency?.code}</span></div>

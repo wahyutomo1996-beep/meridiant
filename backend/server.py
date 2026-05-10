@@ -28,13 +28,24 @@ load_dotenv(ROOT_DIR / '.env')
 APP_ENV = os.environ.get('APP_ENV', os.environ.get('ENVIRONMENT', 'development')).lower()
 IS_PRODUCTION = APP_ENV in {'production', 'prod'}
 
-# MongoDB
+# MongoDB - use in-memory mongomock for local dev when USE_INMEMORY_DB=true
+USE_INMEMORY_DB = os.environ.get('USE_INMEMORY_DB', '').lower() in {'1', 'true', 'yes'}
 mongo_url = os.environ.get('MONGO_URL')
-if not mongo_url:
-    if IS_PRODUCTION:
-        raise RuntimeError('MONGO_URL is required in production')
-    mongo_url = 'mongodb://localhost:27017'
-client = AsyncIOMotorClient(mongo_url)
+
+if USE_INMEMORY_DB and not IS_PRODUCTION:
+    try:
+        from mongomock_motor import AsyncMongoMockClient
+        client = AsyncMongoMockClient()
+        logging.getLogger(__name__).info("Using in-memory MongoDB (mongomock-motor)")
+    except ImportError:
+        raise RuntimeError('USE_INMEMORY_DB=true requires `pip install mongomock-motor`')
+else:
+    if not mongo_url:
+        if IS_PRODUCTION:
+            raise RuntimeError('MONGO_URL is required in production')
+        mongo_url = 'mongodb://localhost:27017'
+    client = AsyncIOMotorClient(mongo_url)
+
 db = client[os.environ.get('DB_NAME', 'meridiant_db')]
 
 # JWT Config
@@ -51,6 +62,12 @@ GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
 ALCHEMY_API_KEY = os.environ.get('ALCHEMY_API_KEY')
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
+# Chatbot provider keys (in priority order). Set ONE of these.
+OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY')  # https://openrouter.ai/keys - access many models with one key
+OPENROUTER_MODEL = os.environ.get('OPENROUTER_MODEL', 'google/gemini-2.5-flash')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')          # https://aistudio.google.com/apikey
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')    # https://console.anthropic.com/
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')          # https://platform.openai.com/
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@meridiant.com')
@@ -639,41 +656,173 @@ Panduan menjawab:
 async def chat_endpoint(data: ChatMessage):
     session_id = data.session_id or str(uuid.uuid4())
     try:
-        if not HAS_EMERGENT or not EMERGENT_LLM_KEY:
-            return {"reply": "Maaf, fitur chatbot sedang dalam maintenance. Silakan hubungi support@meridiant.com untuk bantuan.", "session_id": session_id}
-
         # Load chat history from DB
         history_doc = await db.chat_sessions.find_one({"_id": session_id})
-        messages = history_doc.get("messages", []) if history_doc else []
+        stored_messages = history_doc.get("messages", []) if history_doc else []
 
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=session_id,
-            system_message=CHATBOT_SYSTEM
-        ).with_model("openai", "gpt-4.1-mini")
+        # Build chat history in OpenAI-compatible format (last 10 turns)
+        history = [{"role": m["role"], "content": m["content"]} for m in stored_messages[-10:]]
+        history.append({"role": "user", "content": data.message})
 
-        # Replay history into chat context
-        for msg in messages[-10:]:  # Last 10 messages for context
-            if msg["role"] == "user":
-                await chat.send_message(UserMessage(text=msg["content"]))
-            # Assistant messages are automatically tracked by LlmChat
-
-        # Send new message
-        response = await chat.send_message(UserMessage(text=data.message))
+        reply = await _generate_chat_reply(history)
+        if reply is None:
+            return {
+                "reply": "Maaf, fitur chatbot sedang dalam maintenance. Silakan hubungi support@meridiant.com untuk bantuan.",
+                "session_id": session_id,
+            }
 
         # Save to DB
-        messages.append({"role": "user", "content": data.message, "ts": datetime.now(timezone.utc).isoformat()})
-        messages.append({"role": "assistant", "content": response, "ts": datetime.now(timezone.utc).isoformat()})
+        stored_messages.append({"role": "user", "content": data.message, "ts": datetime.now(timezone.utc).isoformat()})
+        stored_messages.append({"role": "assistant", "content": reply, "ts": datetime.now(timezone.utc).isoformat()})
         await db.chat_sessions.update_one(
             {"_id": session_id},
-            {"$set": {"messages": messages, "updated_at": datetime.now(timezone.utc).isoformat()}},
-            upsert=True
+            {"$set": {"messages": stored_messages, "updated_at": datetime.now(timezone.utc).isoformat()}},
+            upsert=True,
         )
 
-        return {"reply": response, "session_id": session_id}
+        return {"reply": reply, "session_id": session_id}
     except Exception as e:
         logger.error(f"Chat error: {e}")
-        return {"reply": "Maaf, terjadi gangguan pada sistem kami. Silakan coba lagi atau hubungi support@meridiant.com", "session_id": session_id}
+        return {
+            "reply": "Maaf, terjadi gangguan pada sistem kami. Silakan coba lagi atau hubungi support@meridiant.com",
+            "session_id": session_id,
+        }
+
+
+async def _generate_chat_reply(history: list[dict]) -> Optional[str]:
+    """
+    Try providers in priority order: OpenRouter -> Gemini -> Anthropic -> OpenAI -> Emergent (legacy).
+    Returns None if no provider is configured.
+    """
+    if OPENROUTER_API_KEY:
+        try:
+            return await _chat_openrouter(history)
+        except Exception as e:
+            logger.warning(f"OpenRouter failed, trying next provider: {e}")
+
+    if GEMINI_API_KEY:
+        try:
+            return await _chat_gemini(history)
+        except Exception as e:
+            logger.warning(f"Gemini failed, trying next provider: {e}")
+
+    if ANTHROPIC_API_KEY:
+        try:
+            return await _chat_anthropic(history)
+        except Exception as e:
+            logger.warning(f"Anthropic failed, trying next provider: {e}")
+
+    if OPENAI_API_KEY:
+        try:
+            return await _chat_openai(history)
+        except Exception as e:
+            logger.warning(f"OpenAI failed, trying next provider: {e}")
+
+    if HAS_EMERGENT and EMERGENT_LLM_KEY:
+        try:
+            return await _chat_emergent(history)
+        except Exception as e:
+            logger.warning(f"Emergent failed: {e}")
+
+    return None
+
+
+async def _chat_openrouter(history: list[dict]) -> str:
+    """OpenRouter - unified API for many models. Model selected via OPENROUTER_MODEL env var."""
+    messages = [{"role": "system", "content": CHATBOT_SYSTEM}] + history
+    async with httpx.AsyncClient(timeout=30) as http:
+        resp = await http.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "HTTP-Referer": "https://meridiant.com",
+                "X-Title": "Meridiant CS Bot",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": OPENROUTER_MODEL,
+                "messages": messages,
+                "max_tokens": 500,
+                "temperature": 0.7,
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    return data["choices"][0]["message"]["content"].strip()
+
+
+async def _chat_gemini(history: list[dict]) -> str:
+    """Google Gemini 2.5 Flash - cheapest, fast, good Bahasa Indonesia."""
+    contents = []
+    for msg in history:
+        role = "user" if msg["role"] == "user" else "model"
+        contents.append({"role": role, "parts": [{"text": msg["content"]}]})
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    payload = {
+        "contents": contents,
+        "systemInstruction": {"parts": [{"text": CHATBOT_SYSTEM}]},
+        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 500},
+    }
+    async with httpx.AsyncClient(timeout=30) as http:
+        resp = await http.post(url, json=payload)
+        resp.raise_for_status()
+        data = resp.json()
+    return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+
+
+async def _chat_anthropic(history: list[dict]) -> str:
+    """Anthropic Claude Haiku 4.5 - best tone/instruction following."""
+    messages = [{"role": m["role"], "content": m["content"]} for m in history]
+    async with httpx.AsyncClient(timeout=30) as http:
+        resp = await http.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": "claude-haiku-4-5",
+                "max_tokens": 500,
+                "system": CHATBOT_SYSTEM,
+                "messages": messages,
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    return data["content"][0]["text"].strip()
+
+
+async def _chat_openai(history: list[dict]) -> str:
+    """OpenAI GPT-4o-mini - mature tooling."""
+    messages = [{"role": "system", "content": CHATBOT_SYSTEM}] + history
+    async with httpx.AsyncClient(timeout=30) as http:
+        resp = await http.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
+            json={"model": "gpt-4o-mini", "messages": messages, "max_tokens": 500, "temperature": 0.7},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    return data["choices"][0]["message"]["content"].strip()
+
+
+async def _chat_emergent(history: list[dict]) -> str:
+    """Legacy emergentintegrations wrapper (GPT-4.1-mini)."""
+    # Use a fresh session so we don't double-replay history; the caller owns history.
+    import uuid as _uuid
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=str(_uuid.uuid4()),
+        system_message=CHATBOT_SYSTEM,
+    ).with_model("openai", "gpt-4.1-mini")
+    last_user = history[-1]["content"]
+    # Replay prior user turns for context
+    for msg in history[:-1]:
+        if msg["role"] == "user":
+            await chat.send_message(UserMessage(text=msg["content"]))
+    return (await chat.send_message(UserMessage(text=last_user))).strip()
 
 # ============ ADMIN DASHBOARD ============
 

@@ -197,7 +197,7 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
   if (type === 'fiat') {
     return (
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-sm border-gray-700/50 p-0" style={{ background: '#111827' }}>
+        <DialogContent className="sm:max-w-sm border-gray-700/50 p-0" style={{ background: 'var(--modal-bg)' }}>
           <DialogTitle className="p-5 pb-3 text-white text-lg font-semibold">Select currency</DialogTitle>
           <div className="pb-3 max-h-[300px] overflow-y-auto custom-scrollbar">
             {currencies.map(c => (
@@ -215,7 +215,7 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 gap-0 max-h-[85vh] sm:max-h-[85vh] h-[100dvh] sm:h-auto flex flex-col [&>button]:hidden sm:rounded-2xl rounded-none" style={{ background: '#111827' }}>
+      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 gap-0 max-h-[85vh] sm:max-h-[85vh] h-[100dvh] sm:h-auto flex flex-col [&>button]:hidden sm:rounded-2xl rounded-none" style={{ background: 'var(--modal-bg)' }}>
         <div className="flex items-center justify-between p-5 pb-3 flex-shrink-0">
           <DialogTitle className="text-white text-lg font-semibold">Select a token</DialogTitle>
           <button onClick={handleClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
@@ -239,7 +239,7 @@ const TokenSelectorModal = ({ open, onClose, currencies, selected, onSelect, typ
                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showNetworks ? 'rotate-180' : ''}`} />
               </button>
               {showNetworks && (
-                <div className="absolute right-0 top-full mt-1 w-56 rounded-xl border border-gray-700/50 shadow-2xl z-50 max-h-[300px] overflow-y-auto custom-scrollbar" style={{ background: '#1a2235' }}>
+                <div className="absolute right-0 top-full mt-1 w-56 rounded-xl border border-gray-700/50 shadow-2xl z-50 max-h-[300px] overflow-y-auto custom-scrollbar" style={{ background: 'var(--dropdown-bg)' }}>
                   {networks.map(n => (
                     <button key={n.id} onClick={() => { setSelectedNetwork(n.id); setShowNetworks(false); }}
                       className={`flex items-center gap-3 w-full px-4 py-2.5 hover:bg-white/5 text-sm ${selectedNetwork === n.id ? 'bg-emerald-500/10' : ''}`}>
@@ -342,7 +342,7 @@ const MethodPickerModal = ({ open, onClose, groups, selected, onSelect, title })
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 gap-0 max-h-[85vh] sm:max-h-[85vh] h-[100dvh] sm:h-auto flex flex-col [&>button]:hidden sm:rounded-2xl rounded-none" style={{ background: '#111827' }}>
+      <DialogContent className="sm:max-w-md border-gray-700/50 p-0 gap-0 max-h-[85vh] sm:max-h-[85vh] h-[100dvh] sm:h-auto flex flex-col [&>button]:hidden sm:rounded-2xl rounded-none" style={{ background: 'var(--modal-bg)' }}>
         <div className="flex items-center justify-between p-5 pb-3 flex-shrink-0">
           <DialogTitle className="text-white text-lg font-semibold">{title}</DialogTitle>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">

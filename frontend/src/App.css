@@ -213,19 +213,140 @@ input {
   box-sizing: border-box;
 }
 
-/* Light mode: hide space elements, adjust shadows */
+/* Light mode: hide space elements, adjust shadows & palette */
 [data-theme="light"] .star-twinkle { display: none; }
 [data-theme="light"] .shooting-star { display: none; }
 [data-theme="light"] .orbital-ring { display: none; }
-[data-theme="light"] .nebula-cloud { opacity: 0.3; }
+
+/* Softer, warmer nebulas for light mode - like morning mist */
+[data-theme="light"] .nebula-1 {
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.03) 40%, transparent 70%);
+  opacity: 1;
+}
+[data-theme="light"] .nebula-2 {
+  background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.02) 50%, transparent 70%);
+  opacity: 1;
+}
+[data-theme="light"] .nebula-3 {
+  background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.06) 0%, transparent 60%);
+  opacity: 1;
+}
+[data-theme="light"] .nebula-4 {
+  background: radial-gradient(ellipse at center, rgba(52, 211, 153, 0.05) 0%, transparent 60%);
+  opacity: 1;
+}
+
 [data-theme="light"] .anim-pulse-glow {
   animation: pulse-glow-light 3s ease-in-out infinite;
 }
 [data-theme="light"] .glass-card {
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
+}
+[data-theme="light"] .card-lift:hover {
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.12), 0 4px 8px rgba(15, 23, 42, 0.06);
+}
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.25);
+}
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.45);
+}
+
+/* Chain pill refinement for light mode */
+[data-theme="light"] .chain-pill {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(203, 213, 225, 0.6) !important;
+  box-shadow: var(--shadow-sm);
+}
+[data-theme="light"] .chain-pill:hover {
+  background: rgba(255, 255, 255, 1) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
 }
 
 @keyframes pulse-glow-light {
   0%, 100% { box-shadow: 0 4px 24px rgba(16, 185, 129, 0.08); }
   50% { box-shadow: 0 4px 32px rgba(16, 185, 129, 0.14); }
 }
+
+/* =============================================================
+   Theme-aware utility classes. These bind Tailwind-like semantics
+   to CSS variables so a single class works in both dark and light.
+   Use these INSTEAD of hardcoded text-white/text-gray-400/bg-gray-800.
+   ============================================================= */
+
+/* Text */
+.c-text-primary { color: var(--text-primary); }
+.c-text-secondary { color: var(--text-secondary); }
+.c-text-muted { color: var(--text-muted); }
+.c-text-accent { color: var(--accent); }
+
+/* Backgrounds */
+.c-bg-primary { background: var(--bg-primary); }
+.c-bg-secondary { background: var(--bg-secondary); }
+.c-bg-card { background: var(--bg-card); }
+.c-bg-inner { background: var(--card-inner); }
+.c-bg-modal { background: var(--modal-bg); }
+.c-bg-dropdown { background: var(--dropdown-bg); }
+.c-bg-input { background: var(--input-bg); }
+.c-bg-accent-soft { background: var(--accent-bg); }
+
+/* Borders */
+.c-border { border: 1px solid var(--divider); }
+.c-border-b { border-bottom: 1px solid var(--divider); }
+.c-border-t { border-top: 1px solid var(--divider); }
+.c-border-input { border: 1px solid var(--input-border); }
+.c-border-dropdown { border: 1px solid var(--dropdown-border); }
+.c-border-accent { border: 1px solid var(--accent-border); }
+
+/* Placeholder */
+.c-placeholder::placeholder { color: var(--text-muted); opacity: 0.7; }
+
+/* Hover overlays */
+.c-hover-soft:hover { background: var(--hover-bg); }
+.c-hover-danger:hover { background: var(--danger-bg); }
+.c-hover-danger:hover svg { color: var(--danger) !important; }
+
+/* Focus ring for inputs */
+.c-focus-accent:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+/* =============================================================
+   Legacy dark utility fallback overrides for light mode.
+   Kept minimal — prefer migrating components to .c-* classes.
+   ============================================================= */
+[data-theme="light"] .text-white { color: var(--text-primary) !important; }
+[data-theme="light"] .text-gray-100,
+[data-theme="light"] .text-gray-200,
+[data-theme="light"] .text-gray-300 { color: var(--text-primary) !important; }
+[data-theme="light"] .text-gray-400 { color: var(--text-secondary) !important; }
+[data-theme="light"] .text-gray-500,
+[data-theme="light"] .text-gray-600 { color: var(--text-muted) !important; }
+[data-theme="light"] .placeholder\:text-gray-500::placeholder,
+[data-theme="light"] .placeholder\:text-gray-600::placeholder { color: var(--text-muted) !important; opacity: 0.7; }
+
+[data-theme="light"] .bg-gray-800,
+[data-theme="light"] .bg-gray-800\/60,
+[data-theme="light"] .bg-gray-800\/80,
+[data-theme="light"] .bg-gray-800\/40,
+[data-theme="light"] .bg-slate-800 { background-color: var(--card-inner) !important; }
+
+[data-theme="light"] .bg-gray-900,
+[data-theme="light"] .bg-gray-900\/80,
+[data-theme="light"] .bg-slate-900 { background-color: var(--bg-secondary) !important; }
+
+[data-theme="light"] .bg-gray-700\/40 { background-color: var(--card-inner) !important; }
+
+[data-theme="light"] .border-gray-700,
+[data-theme="light"] .border-gray-700\/50,
+[data-theme="light"] .border-gray-700\/40,
+[data-theme="light"] .border-gray-700\/30,
+[data-theme="light"] .border-gray-600,
+[data-theme="light"] .border-gray-600\/50,
+[data-theme="light"] .border-gray-600\/60,
+[data-theme="light"] .border-gray-600\/40 { border-color: var(--divider) !important; }
+
+[data-theme="light"] .hover\:bg-white\/5:hover,
+[data-theme="light"] .hover\:bg-white\/10:hover { background-color: var(--hover-bg) !important; }

@@ -19,37 +19,70 @@ code {
 
 /* Meridiant theme variables */
 :root {
+    /* Dark mode (default) */
     --bg-primary: #080d18;
+    --bg-secondary: #0f1729;
     --bg-card: rgba(21, 28, 44, 0.88);
     --bg-card-border: rgba(52, 211, 153, 0.06);
     --card-inner: #0c1120;
+    --card-inner-hover: #141b2e;
     --text-primary: #ffffff;
     --text-secondary: #9ca3af;
     --text-muted: #6b7280;
     --accent: #34d399;
+    --accent-hover: #10b981;
     --accent-bg: rgba(16, 185, 129, 0.08);
+    --accent-border: rgba(52, 211, 153, 0.2);
     --nav-bg: transparent;
+    --nav-border: rgba(55, 65, 81, 0.3);
     --footer-border: rgba(31, 41, 55, 0.3);
     --modal-bg: #111827;
+    --modal-overlay: rgba(0, 0, 0, 0.7);
     --dropdown-bg: #1a2235;
+    --dropdown-border: rgba(55, 65, 81, 0.4);
     --input-bg: #0c1120;
+    --input-border: rgba(55, 65, 81, 0.5);
+    --input-focus-border: rgba(52, 211, 153, 0.4);
+    --divider: rgba(55, 65, 81, 0.4);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.4);
+    --hover-bg: rgba(52, 211, 153, 0.08);
+    --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.1);
 }
 
 [data-theme="light"] {
-    --bg-primary: #f0f4f8;
-    --bg-card: rgba(255, 255, 255, 0.92);
-    --bg-card-border: rgba(16, 185, 129, 0.12);
-    --card-inner: #f1f5f9;
-    --text-primary: #0f172a;
+    --bg-primary: #f7faf9;
+    --bg-secondary: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.95);
+    --bg-card-border: rgba(16, 185, 129, 0.18);
+    --card-inner: #f1f7f4;
+    --card-inner-hover: #e8f3ed;
+    --text-primary: #0f1f17;
     --text-secondary: #475569;
     --text-muted: #94a3b8;
     --accent: #059669;
-    --accent-bg: rgba(16, 185, 129, 0.08);
-    --nav-bg: rgba(255, 255, 255, 0.7);
-    --footer-border: rgba(203, 213, 225, 0.5);
+    --accent-hover: #047857;
+    --accent-bg: rgba(16, 185, 129, 0.1);
+    --accent-border: rgba(16, 185, 129, 0.25);
+    --nav-bg: rgba(255, 255, 255, 0.75);
+    --nav-border: rgba(203, 213, 225, 0.4);
+    --footer-border: rgba(203, 213, 225, 0.6);
     --modal-bg: #ffffff;
+    --modal-overlay: rgba(15, 23, 42, 0.4);
     --dropdown-bg: #ffffff;
-    --input-bg: #f1f5f9;
+    --dropdown-border: rgba(203, 213, 225, 0.7);
+    --input-bg: #f1f7f4;
+    --input-border: rgba(148, 163, 184, 0.3);
+    --input-focus-border: rgba(16, 185, 129, 0.45);
+    --divider: rgba(203, 213, 225, 0.5);
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 10px 32px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.04);
+    --hover-bg: rgba(16, 185, 129, 0.06);
+    --danger: #dc2626;
+    --danger-bg: rgba(220, 38, 38, 0.08);
 }
 
 @layer base {
