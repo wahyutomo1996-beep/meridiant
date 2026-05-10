@@ -13,7 +13,13 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 from jose import jwt, JWTError
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+try:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    HAS_EMERGENT = True
+except ImportError:
+    HAS_EMERGENT = False
+    LlmChat = None
+    UserMessage = None
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -56,6 +62,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
+
+# Logging setup (must be before any logger usage)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # ============ MODELS ============
 
@@ -629,6 +639,9 @@ Panduan menjawab:
 async def chat_endpoint(data: ChatMessage):
     session_id = data.session_id or str(uuid.uuid4())
     try:
+        if not HAS_EMERGENT or not EMERGENT_LLM_KEY:
+            return {"reply": "Maaf, fitur chatbot sedang dalam maintenance. Silakan hubungi support@meridiant.com untuk bantuan.", "session_id": session_id}
+
         # Load chat history from DB
         history_doc = await db.chat_sessions.find_one({"_id": session_id})
         messages = history_doc.get("messages", []) if history_doc else []
@@ -803,9 +816,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def seed_test_user():
